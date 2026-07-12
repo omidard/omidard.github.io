@@ -12,7 +12,7 @@ Live at **<https://omidard.github.io>**
 | [biggr.org](https://biggr.org) | BiGG 2026, the next-generation BiGG Models database. First author on the pipeline. |
 | [panGEMs browser](https://omidard.github.io/panGEMs/) | 2,313 *E. coli* + 2,346 Lactobacillaceae strain-specific genome-scale models |
 | [EcopanGEM](https://github.com/omidard/EcopanGEM) | Pangenome-scale reconstruction of *E. coli* metabolism |
-| [LactoPanGEM](https://github.com/omidard/LactoPanGEM) | Pangenome reconstruction of Lactobacillaceae metabolism |
+| [LactoPanGEM browser](https://omidard.github.io/LactoPanGEM/) | 2,346 Lactobacillaceae strain-specific genome-scale models, 28 species |
 | [GrowthDB](https://github.com/omidard/GrowthDB) | Experimental prokaryote growth, uptake and secretion rates |
 | [Media](https://github.com/omidard/Media) | Citation-backed, model-ready growth media mapped to BiGG exchanges |
 | [ORCID](https://orcid.org/0000-0002-0064-3802) | Full publication list |
