@@ -142,7 +142,7 @@
       <span class="metric-label">building computational<br>biology at scale</span>
     </div>
     <div class="metric reveal" data-reveal data-reveal-delay="180">
-      <span class="metric-num" data-count="6" data-suffix="">0</span>
+      <span class="metric-num" data-count="7" data-suffix="">0</span>
       <span class="metric-label">open tools, models<br>and databases shipped</span>
     </div>
   </div>
@@ -197,6 +197,7 @@
       <button class="chip is-active" role="tab" aria-selected="true" data-filter="all">All</button>
       <button class="chip" role="tab" aria-selected="false" data-filter="database">Databases</button>
       <button class="chip" role="tab" aria-selected="false" data-filter="models">Models</button>
+      <button class="chip" role="tab" aria-selected="false" data-filter="tools">Tools</button>
       <button class="chip" role="tab" aria-selected="false" data-filter="research">Research</button>
     </div>
 
@@ -246,7 +247,43 @@
         </div>
       </article>
 
-      <article class="card" data-cat="models" data-reveal data-reveal-delay="120">
+      <article class="card is-wide is-figure is-shot" data-cat="tools" data-reveal data-reveal-delay="90">
+        <button class="figplate" type="button" data-fig="fig-flux"
+                data-cap="Flux Analysis Studio: a constraint-based modelling workbench for 2,313 E. coli strain GEMs. The linear program is solved in the browser by a WebAssembly build of GLPK.">
+          <img src="figures/fig-flux-card.jpg" width="1100" height="481" loading="lazy"
+               alt="The Flux Analysis Studio tool gallery: Explore and Compare, Dynamic FBA, Flux Variability, Production Envelope, Phenotype Phase Plane, Essentiality Screen, Multi-model analytics, and Group comparison.">
+          <span class="figplate-cue">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 8.5v5M8.5 11h5M20 20l-4.4-4.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            View full size
+          </span>
+        </button>
+        <div class="figbody">
+          <div class="card-top">
+            <span class="tag tag-accent">Flagship tool</span>
+            <span class="tag">Runs in your browser</span>
+          </div>
+          <h3>Flux Analysis Studio</h3>
+          <p class="card-org">omidard.github.io/EcopanGEM/analysis.html</p>
+          <p>
+            A full <strong>constraint-based modelling workbench</strong> for 2,313 <em>E. coli</em>
+            strain models, with <strong>no server and no queue</strong>: the linear program is solved
+            in the browser tab by a <strong>WebAssembly build of GLPK</strong>. Eight analyses, each
+            with a live Escher flux map or interactive charts: FBA and pFBA with editable media and
+            knockouts, dynamic FBA, flux variability, production envelopes, phenotype phase planes,
+            essentiality screens, multi-model analytics, and cohort comparison with Mann-Whitney and
+            Benjamini-Hochberg FDR. Every result reproduces COBRApy and scipy to full precision.
+          </p>
+          <div class="card-links">
+            <a class="link-out" href="https://omidard.github.io/EcopanGEM/analysis.html" target="_blank" rel="noopener">
+              Launch the studio
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a class="link-out subtle" href="https://github.com/omidard/EcopanGEM" target="_blank" rel="noopener">Source</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card is-feature" data-cat="models" data-reveal data-reveal-delay="120">
         <div class="card-top"><span class="tag">Models</span></div>
         <h3>EcopanGEM</h3>
         <p class="card-org">Pangenome-scale reconstruction of <em>E. coli</em> metabolism</p>
@@ -260,7 +297,7 @@
         </div>
       </article>
 
-      <article class="card" data-cat="models" data-reveal data-reveal-delay="180">
+      <article class="card is-feature" data-cat="models" data-reveal data-reveal-delay="180">
         <div class="card-top"><span class="tag">Models</span><span class="tag">Live browser</span></div>
         <h3>LactoPanGEM</h3>
         <p class="card-org">Pangenome reconstruction of Lactobacillaceae metabolism</p>
@@ -278,7 +315,7 @@
         </div>
       </article>
 
-      <article class="card" data-cat="database" data-reveal data-reveal-delay="120">
+      <article class="card is-feature" data-cat="database" data-reveal data-reveal-delay="120">
         <div class="card-top"><span class="tag">Database</span></div>
         <h3>GrowthDB</h3>
         <p class="card-org">Measured ground truth for metabolic models</p>
@@ -293,7 +330,7 @@
         </div>
       </article>
 
-      <article class="card" data-cat="database" data-reveal data-reveal-delay="180">
+      <article class="card is-feature" data-cat="database" data-reveal data-reveal-delay="180">
         <div class="card-top"><span class="tag">Database</span></div>
         <h3>Media</h3>
         <p class="card-org">Citation-backed growth media, model-ready</p>

@@ -457,6 +457,10 @@ main, .nav, .footer { position: relative; z-index: 1; }
   gap: var(--sp-6);
   align-items: start;
 }
+/* A landscape screenshot squeezed into the narrow portrait column becomes an
+   unreadable strip. Give it the full card width and put the copy underneath. */
+.card.is-figure.is-shot { grid-template-columns: 1fr; gap: var(--sp-5); }
+
 .figbody { display: flex; flex-direction: column; min-width: 0; }
 .figbody .card-links { margin-top: auto; padding-top: var(--sp-3); }
 
