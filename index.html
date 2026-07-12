@@ -303,21 +303,72 @@
         </div>
       </article>
 
-      <article class="card is-wide" data-cat="research" data-reveal data-reveal-delay="120">
-        <div class="card-top"><span class="tag tag-accent">Research</span><span class="tag">Science Advances 2026</span></div>
-        <h3>The genetic basis of metabolic function</h3>
-        <p class="card-org">Millions of genes, thousands of genomes</p>
-        <p>
-          The same enzyme activity can be encoded by genes that share almost no sequence. I search
-          millions of genes across thousands of genomes, test whether each is genuinely functional
-          rather than merely annotated, and map the full space of distinct genetic codes that
-          arrive at one and the same chemistry.
-        </p>
-        <div class="card-links">
-          <a class="link-out" href="https://doi.org/10.1126/sciadv.aeb3363" target="_blank" rel="noopener">
-            Science Advances
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </a>
+      <article class="card is-wide is-figure" data-cat="research" data-reveal data-reveal-delay="120">
+        <button class="figplate" type="button" data-fig="fig-sciadv"
+                data-cap="Annotating the pangenome reveals the diversity in the genetic basis for metabolic enzymes. Science Advances 12(27), 2026.">
+          <img src="figures/fig-sciadv-card.jpg" width="900" height="1274" loading="lazy"
+               alt="Four-panel figure: pangenome gene classes (core, accessory, rare) and the gene acquisition, loss and fragmentation events that generate them; the pdeH cluster genomic neighborhood across strains; a cluster similarity heatmap with dendrogram; and a multiple sequence alignment of pdeH clusters showing the EAL domain.">
+          <span class="figplate-cue">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 8.5v5M8.5 11h5M20 20l-4.4-4.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            View full figure
+          </span>
+        </button>
+        <div class="figbody">
+          <div class="card-top">
+            <span class="tag tag-accent">Research</span>
+            <span class="tag">Science Advances 2026</span>
+          </div>
+          <h3>The genetic basis of metabolic function</h3>
+          <p class="card-org">First and corresponding author</p>
+          <p>
+            The same enzyme activity can be encoded by genes that share almost no sequence, and
+            annotation databases quietly paper over this by copying labels between homologs. This
+            work searches millions of genes across thousands of genomes, tests whether each gene is
+            genuinely functional rather than merely annotated, and maps the full space of distinct
+            genetic codes that arrive at one and the same chemistry.
+          </p>
+          <div class="card-links">
+            <a class="link-out" href="https://doi.org/10.1126/sciadv.aeb3363" target="_blank" rel="noopener">
+              Read the paper
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a class="link-out subtle" href="https://github.com/omidard/EcopanGEM" target="_blank" rel="noopener">Code</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card is-wide is-figure" data-cat="research" data-reveal data-reveal-delay="180">
+        <button class="figplate" type="button" data-fig="fig-plos"
+                data-cap="Rare metabolic gene essentiality is a determinant of microniche adaptation in Escherichia coli. PLOS Pathogens 21(12), 2025.">
+          <img src="figures/fig-plos-card.jpg" width="900" height="1274" loading="lazy"
+               alt="Four-panel figure: panGEM reconstruction across 12,934 genomes with panGPRs and gene-knockout validation at 93 percent accuracy; nutrient availability in feces, urine and serum media; the resulting metabolic shifts on flux maps; and a reaction essentiality matrix showing that 41 percent of strains carry at least one essential non-redundant rare gene.">
+          <span class="figplate-cue">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 8.5v5M8.5 11h5M20 20l-4.4-4.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            View full figure
+          </span>
+        </button>
+        <div class="figbody">
+          <div class="card-top">
+            <span class="tag tag-accent">Research</span>
+            <span class="tag">PLOS Pathogens 2025</span>
+          </div>
+          <h3>Rare genes decide where a strain can live</h3>
+          <p class="card-org">First author</p>
+          <p>
+            Reconstructed the panGEM across <strong>12,934 <em>E. coli</em> genomes</strong>, validated
+            its gene-knockout predictions to <strong>93% accuracy</strong> against experiment, and ran
+            more than <strong>22 million knockout simulations</strong> across gut, urine and serum
+            media. <strong>41% of fully sequenced strains carry at least one essential, non-redundant
+            rare gene.</strong> The rare tail of the pangenome is not junk. It is a large part of what
+            fits a strain to its niche.
+          </p>
+          <div class="card-links">
+            <a class="link-out" href="https://doi.org/10.1371/journal.ppat.1013775" target="_blank" rel="noopener">
+              Read the paper
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a class="link-out subtle" href="https://github.com/omidard/EcopanGEM" target="_blank" rel="noopener">Code</a>
+          </div>
         </div>
       </article>
 
@@ -340,7 +391,7 @@
         <div class="pub-body">
           <h3><a href="https://doi.org/10.1126/sciadv.aeb3363" target="_blank" rel="noopener">Annotating the pangenome reveals the diversity in the genetic basis for metabolic enzymes</a></h3>
           <p class="pub-meta"><strong>Science Advances</strong> 12(27) · <span class="mono">10.1126/sciadv.aeb3363</span></p>
-          <p class="pub-role">First author</p>
+          <p class="pub-role">First and corresponding author</p>
         </div>
       </li>
 
@@ -418,27 +469,30 @@
 
     <div class="prose reveal" data-reveal data-reveal-delay="60">
       <p class="pull">
-        Ten years ago I was the first person in my department to do computational biology. There was
-        no course to take and nobody to learn it from, so I taught it to myself.
+        I study bacteria at the scale of whole species rather than single strains, because that is
+        the scale at which the interesting patterns become visible.
       </p>
       <p>
-        I did that because I believed a new Darwin would come out of computational biology, for one
-        reason: computation was the only way to look at life at a scale where the real patterns
-        become visible, and nothing else could give us that perception.
+        One genome tells you what one organism can do. Thousands of them, reconstructed carefully
+        and compared honestly, start to tell you how metabolism is actually built: which genes are
+        load-bearing, how many different ways evolution has found to run the same reaction, and how
+        much of what we call annotation is really a label copied from a neighboring gene. That is
+        the question I have spent most of my career on, and I do not think we are close to done
+        with it.
       </p>
       <p>
-        A decade later my conviction has changed shape. The data is here. What biology lacks is a
-        <strong>reasoning system that can work at this scale</strong>, and that is what machine
-        learning, and now language models, change. Decomposing bacterial genomes with non-negative
-        matrix factorization recovers signals nobody imagined were recoverable. And the agentic
-        research system I built on Claude Code mines public databases at a resolution nobody had the
-        throughput to reach. The knowledge was already sitting there. Nobody could get to it.
+        What has changed lately is not the amount of data but our ability to reason over it.
+        Machine learning, and now language models, let us ask things of these datasets that were
+        previously out of reach: decomposing genomes to find structure nobody thought to look for,
+        or building agents that run a real analysis and then check their own claims against the
+        evidence. Most of what I have found this way was already sitting in public databases. It
+        mainly needed someone with the throughput to go and look.
       </p>
       <p>
-        I did not arrive at computation from computer science. I trained in general biology,
-        molecular biology and biotechnology first, isolated bacteria at the bench, and took seven
-        strains from a flask to commercial production at a startup. That is why I know where a
-        prediction meets reality, and where it does not.
+        I did not arrive at computation from computer science. I trained in biology, worked at the
+        bench, and helped take strains from a flask to commercial production before I wrote
+        pipelines for a living. That is the reason I try to keep the modeling honest: a prediction
+        is only worth something if it survives contact with a measurement.
       </p>
       <p class="signature">
         <span class="mono">Ph.D. Systems Biology, DTU · trained in the group of Prof. Bernhard O. Palsson</span>
@@ -523,6 +577,17 @@
     </nav>
   </div>
 </footer>
+
+<!-- figure lightbox -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lb-cap" hidden>
+  <button class="lb-close" id="lb-close" type="button" aria-label="Close figure">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+  <figure class="lb-fig">
+    <img id="lb-img" alt="">
+    <figcaption id="lb-cap"></figcaption>
+  </figure>
+</div>
 
 <script src="script.js"></script>
 <script src="scene.js"></script>

@@ -450,6 +450,77 @@ main, .nav, .footer { position: relative; z-index: 1; }
   padding: 3px var(--sp-3); border-radius: var(--r-full); background: var(--surface-2);
 }
 
+/* ---------- research cards that carry a real figure ---------- */
+.card.is-figure {
+  display: grid;
+  grid-template-columns: minmax(0, 0.46fr) minmax(0, 1fr);
+  gap: var(--sp-6);
+  align-items: start;
+}
+.figbody { display: flex; flex-direction: column; min-width: 0; }
+.figbody .card-links { margin-top: auto; padding-top: var(--sp-3); }
+
+/* The plate stays white in both themes: it is a journal figure, and journal
+   figures are drawn on white. Inverting it would wreck the science. */
+.figplate {
+  position: relative; display: block; width: 100%; padding: 0;
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  background: #fff; cursor: pointer; overflow: hidden;
+  transition: transform var(--t-mid) var(--ease), box-shadow var(--t-mid) var(--ease),
+              border-color var(--t-mid) var(--ease);
+}
+.figplate img { display: block; width: 100%; height: auto; }
+.figplate:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--border-2); }
+.figplate:active { transform: scale(0.99); }
+
+.figplate-cue {
+  position: absolute; left: 50%; bottom: var(--sp-4);
+  transform: translateX(-50%) translateY(6px);
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px var(--sp-4); border-radius: var(--r-full);
+  background: rgba(11, 18, 32, 0.86); color: #fff;
+  font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em;
+  white-space: nowrap;
+  opacity: 0; transition: opacity var(--t-mid) var(--ease), transform var(--t-mid) var(--ease);
+}
+.figplate:hover .figplate-cue,
+.figplate:focus-visible .figplate-cue { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- lightbox ---------- */
+.lightbox {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; flex-direction: column; align-items: center;
+  padding: clamp(16px, 4vh, 48px) var(--sp-4);
+  background: rgba(6, 10, 18, 0.92);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  overflow-y: auto; overscroll-behavior: contain;
+  animation: lbIn var(--t-mid) var(--ease);
+}
+.lightbox[hidden] { display: none; }
+@keyframes lbIn { from { opacity: 0; } to { opacity: 1; } }
+
+.lb-fig { margin: 0; max-width: min(940px, 100%); }
+.lb-fig img {
+  display: block; width: 100%; height: auto;
+  background: #fff; border-radius: var(--r-md);
+  box-shadow: 0 30px 90px -30px rgba(0, 0, 0, 0.8);
+}
+.lb-fig figcaption {
+  margin-top: var(--sp-4); padding-bottom: var(--sp-6);
+  color: #cbd5e1; font-size: 0.88rem; line-height: 1.5; text-align: center;
+}
+.lb-close {
+  position: sticky; top: 0; align-self: flex-end;
+  display: inline-grid; place-items: center;
+  width: 44px; height: 44px; flex: none; margin-bottom: var(--sp-3);
+  border: 1px solid rgba(255, 255, 255, 0.22); border-radius: var(--r-full);
+  background: rgba(11, 18, 32, 0.9); color: #fff; cursor: pointer;
+  transition: transform var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+.lb-close:hover { background: rgba(255, 255, 255, 0.14); }
+.lb-close:active { transform: scale(0.94); }
+body.lb-open { overflow: hidden; }
+
 /* ---------- publications ---------- */
 .pubs { list-style: none; margin: 0; padding: 0; }
 .pub {
@@ -547,6 +618,8 @@ main, .nav, .footer { position: relative; z-index: 1; }
   .section { padding: var(--sp-8) 0; }
   .cards { grid-template-columns: 1fr; }
   .card, .card.is-feature, .card.is-wide { grid-column: span 1; }
+  .card.is-figure { grid-template-columns: 1fr; gap: var(--sp-5); }
+  .figplate-cue { opacity: 1; transform: translateX(-50%); }  /* no hover on touch */
   .pub { grid-template-columns: 1fr; gap: var(--sp-2); }
   .pub-year { padding-top: 0; }
   .timeline li { grid-template-columns: 1fr; gap: var(--sp-2); }

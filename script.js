@@ -180,6 +180,47 @@
     sections.forEach(function (s) { spy.observe(s); });
   }
 
+  /* ------------------------------------------------------------ lightbox */
+  var lb = document.getElementById('lightbox');
+  var lbImg = document.getElementById('lb-img');
+  var lbCap = document.getElementById('lb-cap');
+  var lbClose = document.getElementById('lb-close');
+  var opener = null;
+
+  function openFig(btn) {
+    var id = btn.getAttribute('data-fig');
+    var img = btn.querySelector('img');
+    opener = btn;
+    lbImg.src = 'figures/' + id + '-full.jpg';
+    lbImg.alt = img ? img.getAttribute('alt') : '';
+    lbCap.textContent = btn.getAttribute('data-cap') || '';
+    lb.hidden = false;
+    document.body.classList.add('lb-open');
+    lbClose.focus();
+  }
+
+  function closeFig() {
+    if (lb.hidden) return;
+    lb.hidden = true;
+    document.body.classList.remove('lb-open');
+    lbImg.removeAttribute('src');       // drop the big image from memory
+    if (opener) { opener.focus(); opener = null; }
+  }
+
+  if (lb) {
+    Array.prototype.forEach.call(document.querySelectorAll('.figplate'), function (btn) {
+      btn.addEventListener('click', function () { openFig(btn); });
+    });
+    lbClose.addEventListener('click', closeFig);
+    // click the backdrop (but not the figure itself) to dismiss
+    lb.addEventListener('click', function (e) {
+      if (e.target === lb) closeFig();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeFig();
+    });
+  }
+
   /* ------------------------------------------------------------------ misc */
   var year = document.getElementById('year');
   if (year) year.textContent = String(new Date().getFullYear());
