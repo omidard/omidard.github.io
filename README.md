@@ -10,7 +10,7 @@ Live at **<https://omidard.github.io>**
 | | |
 |---|---|
 | [biggr.org](https://biggr.org) | BiGG 2026, the next-generation BiGG Models database. First author on the pipeline. |
-| [Flux Analysis Studio](https://omidard.github.io/EcopanGEM/analysis.html) | A constraint-based modelling workbench: eight analyses, GLPK compiled to WebAssembly, solved in the browser with no server |
+| [Flux Studio](https://omidard.github.io/FluxStudio/) | A constraint-based modelling workbench: eight analyses, GLPK compiled to WebAssembly, solved in the browser with no server |
 | [panGEMs browser](https://omidard.github.io/panGEMs/) | 2,313 *E. coli* + 2,346 Lactobacillaceae strain-specific genome-scale models |
 | [EcopanGEM](https://github.com/omidard/EcopanGEM) | Pangenome-scale reconstruction of *E. coli* metabolism |
 | [LactoPanGEM browser](https://omidard.github.io/LactoPanGEM/) | 2,346 Lactobacillaceae strain-specific genome-scale models, 28 species |
