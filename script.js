@@ -224,4 +224,19 @@
   /* ------------------------------------------------------------------ misc */
   var year = document.getElementById('year');
   if (year) year.textContent = String(new Date().getFullYear());
+
+  /* The media database grows. Read the count from it rather than trusting the
+     number written into the page, which is only a fallback for offline viewing. */
+  var counts = document.querySelectorAll('[data-media-count]');
+  if (counts.length) {
+    fetch('https://omidard.github.io/Media/data/stats.json')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (s) {
+        if (!s || !s.count) return;
+        for (var i = 0; i < counts.length; i++) {
+          counts[i].textContent = s.count.toLocaleString('en-US');
+        }
+      })
+      .catch(function () { /* keep the number already in the page */ });
+  }
 })();
