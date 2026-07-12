@@ -148,6 +148,39 @@
   </div>
 </section>
 
+<!-- ────────────────────── SCROLLYTELLING: THE PIPELINE ────────────────────── -->
+<section class="scrolly" id="pipeline" aria-labelledby="pipeline-h">
+  <div class="scrolly-sticky">
+
+    <canvas id="scene" role="img"
+      aria-label="An animation of the computational pipeline: binary digits assemble into a DNA double helix, 100,000 genomes compress into a single pangenome of core, accessory and cloud genes, and the pangenome resolves into a genome-scale metabolic network with flux flowing through glycolysis and the TCA cycle."></canvas>
+
+    <div class="scrolly-copy">
+      <p class="kicker" id="act-kicker">Act I</p>
+      <h2 id="pipeline-h">From binary to biology</h2>
+      <p class="act-body" id="act-body">
+        It starts as bits. Zeros and ones stream in and pair off into bases, and a genome
+        assembles itself out of information.
+      </p>
+      <dl class="act-stats mono" id="act-stats">
+        <div><dt>Input</dt><dd data-stat="a">binary stream</dd></div>
+        <div><dt>Output</dt><dd data-stat="b">1 genome</dd></div>
+      </dl>
+    </div>
+
+    <div class="scrolly-rail" aria-hidden="true">
+      <span class="scrolly-bar" id="scrolly-bar"></span>
+    </div>
+
+    <ol class="scrolly-steps mono" aria-hidden="true">
+      <li data-step="0" class="is-on">Sequence</li>
+      <li data-step="1">Pangenome</li>
+      <li data-step="2">Metabolism</li>
+    </ol>
+
+  </div>
+</section>
+
 <!-- ─────────────────────────────── WORK ─────────────────────────────── -->
 <section class="section" id="work">
   <div class="wrap">
@@ -312,15 +345,24 @@
       </li>
 
       <li class="pub" data-reveal data-reveal-delay="60">
-        <span class="pub-year">2026</span>
+        <span class="pub-year">2025</span>
         <div class="pub-body">
-          <h3>BiGG 2026: a pangenome-scale metabolic-model generation pipeline and the next-generation release of the BiGG Models database</h3>
-          <p class="pub-meta">In preparation · <a href="https://biggr.org" target="_blank" rel="noopener">biggr.org</a></p>
-          <p class="pub-role">First author, pipeline architect</p>
+          <h3><a href="https://doi.org/10.1371/journal.ppat.1013775" target="_blank" rel="noopener">Rare metabolic gene essentiality is a determinant of microniche adaptation in <em>Escherichia coli</em></a></h3>
+          <p class="pub-meta"><strong>PLOS Pathogens</strong> 21(12) · <span class="mono">10.1371/journal.ppat.1013775</span> · open code: <a href="https://github.com/omidard/EcopanGEM" target="_blank" rel="noopener">EcopanGEM</a></p>
+          <p class="pub-role">First author</p>
         </div>
       </li>
 
       <li class="pub" data-reveal data-reveal-delay="120">
+        <span class="pub-year">2025</span>
+        <div class="pub-body">
+          <h3><a href="https://doi.org/10.1128/msphere.00532-24" target="_blank" rel="noopener">Decomposition of the pangenome matrix reveals a structure in gene distribution in the <em>Escherichia coli</em> species</a></h3>
+          <p class="pub-meta"><strong>mSphere</strong> 10(1) · <span class="mono">10.1128/msphere.00532-24</span></p>
+          <p class="pub-role">Second author</p>
+        </div>
+      </li>
+
+      <li class="pub" data-reveal data-reveal-delay="180">
         <span class="pub-year">2024</span>
         <div class="pub-body">
           <h3><a href="https://doi.org/10.1128/msystems.00156-24" target="_blank" rel="noopener">Pangenome reconstruction of Lactobacillaceae metabolism predicts species-specific metabolic traits</a></h3>
@@ -329,7 +371,7 @@
         </div>
       </li>
 
-      <li class="pub" data-reveal data-reveal-delay="180">
+      <li class="pub" data-reveal data-reveal-delay="240">
         <span class="pub-year">2021</span>
         <div class="pub-body">
           <h3><a href="https://doi.org/10.1016/j.bej.2021.107967" target="_blank" rel="noopener">Reconstruction and validation of a genome-scale metabolic model of <em>L. lactis</em> NCDO 2118; in-silico succinate and GABA overproduction</a></h3>
@@ -338,25 +380,24 @@
         </div>
       </li>
 
-      <li class="pub" data-reveal data-reveal-delay="240">
-        <span class="pub-year">Under<br>review</span>
-        <div class="pub-body">
-          <h3>Rare metabolic gene essentiality is a determinant of microniche adaptation in <em>E. coli</em></h3>
-          <p class="pub-meta">Open code: <a href="https://github.com/omidard/EcopanGEM" target="_blank" rel="noopener">EcopanGEM</a></p>
-          <p class="pub-role">First author</p>
-        </div>
-      </li>
-
       <li class="pub" data-reveal data-reveal-delay="300">
-        <span class="pub-year">Under<br>review</span>
+        <span class="pub-year">In<br>prep</span>
         <div class="pub-body">
-          <h3>Phylon decomposition of the <em>E. coli</em> pangenome by non-negative matrix factorization</h3>
-          <p class="pub-meta">Machine learning applied to pangenome structure</p>
-          <p class="pub-role">Second author</p>
+          <h3>BiGG 2026: a pangenome-scale metabolic-model generation pipeline and the next-generation release of the BiGG Models database</h3>
+          <p class="pub-meta"><a href="https://biggr.org" target="_blank" rel="noopener">biggr.org</a></p>
+          <p class="pub-role">First author, pipeline architect</p>
         </div>
       </li>
 
-      <li class="pub is-patent" data-reveal data-reveal-delay="360">
+      <li class="pub" data-reveal data-reveal-delay="360">
+        <span class="pub-year">Under<br>review</span>
+        <div class="pub-body">
+          <h3>The <em>Escherichia coli</em> pangenome is organized by co-occurring gene sets representing horizontal and vertical inheritance</h3>
+          <p class="pub-meta">Under review at <strong>Science Advances</strong></p>
+        </div>
+      </li>
+
+      <li class="pub is-patent" data-reveal data-reveal-delay="420">
         <span class="pub-year">IP</span>
         <div class="pub-body">
           <h3>Lactobacillaceae-related patent</h3>
@@ -484,5 +525,6 @@
 </footer>
 
 <script src="script.js"></script>
+<script src="scene.js"></script>
 </body>
 </html>
