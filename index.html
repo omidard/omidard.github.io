@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omid Ardalani — Computational Biology at Scale</title>
+<meta name="description" content="Computational biologist. Pangenome-scale metabolic models, machine learning on genomes, and agentic AI systems for biology. Builder of the largest strain-resolved in-silico bacterial cell collections.">
+<meta name="author" content="Omid Ardalani">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://omidard.github.io/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Omid Ardalani — Computational Biology at Scale">
+<meta property="og:description" content="Pangenome-scale metabolic models, machine learning on genomes, and agentic AI systems for biology.">
+<meta property="og:url" content="https://omidard.github.io/">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<!-- If JS never runs, nothing may stay hidden behind an entrance animation. -->
+<noscript><style>[data-reveal]{opacity:1!important;transform:none!important}</style></noscript>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Omid Ardalani",
+  "jobTitle": "Computational Biologist",
+  "affiliation": { "@type": "Organization", "name": "Technical University of Denmark (DTU)" },
+  "url": "https://omidard.github.io/",
+  "email": "mailto:Omidard@biosustain.dtu.dk",
+  "identifier": "https://orcid.org/0000-0002-0064-3802",
+  "sameAs": ["https://github.com/omidard", "https://orcid.org/0000-0002-0064-3802"]
+}
+</script>
+</head>
+
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<div class="ambient" aria-hidden="true">
+  <span class="blob blob-1"></span>
+  <span class="blob blob-2"></span>
+  <span class="blob blob-3"></span>
+  <span class="grid-veil"></span>
+</div>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top" aria-label="Omid Ardalani, home">
+      <svg class="brand-mark" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+        <path d="M8 4c0 6 16 6 16 12S8 22 8 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M24 4c0 6-16 6-16 12s16 6 16 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".45"/>
+        <circle cx="16" cy="16" r="2.4" fill="currentColor"/>
+      </svg>
+      <span class="brand-text">Omid Ardalani</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#work">Work</a>
+      <a href="#papers">Papers</a>
+      <a href="#about">About</a>
+      <a href="#experience">Experience</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to light theme" aria-pressed="false">
+        <svg class="i-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        </svg>
+        <svg class="i-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <a class="btn btn-ghost nav-cv" href="Omid_Ardalani_CV.pdf">CV</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ─────────────────────────────── HERO ─────────────────────────────── -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <p class="eyebrow reveal" data-reveal>
+      <span class="dot" aria-hidden="true"></span>
+      Postdoctoral Researcher · DTU BRIGHT, Denmark
+    </p>
+
+    <h1 class="reveal" data-reveal data-reveal-delay="60">
+      I build biology<br>at a scale you can<br><span class="grad">actually reason about.</span>
+    </h1>
+
+    <p class="lede reveal" data-reveal data-reveal-delay="120">
+      Computational biologist. I built the largest strain-resolved collections of in-silico
+      bacterial cells assembled anywhere, and the pipelines that put that scale within reach of
+      other people. Now I am teaching machines to do the reasoning on top of it.
+    </p>
+
+    <div class="cta-row reveal" data-reveal data-reveal-delay="180">
+      <a class="btn btn-primary" href="#work">
+        Explore the work
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a class="btn btn-ghost" href="Omid_Ardalani_CV.pdf">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Download CV
+      </a>
+    </div>
+
+    <ul class="social reveal" data-reveal data-reveal-delay="240">
+      <li><a href="https://github.com/omidard" aria-label="GitHub profile" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" fill="currentColor"/></svg>
+        <span>GitHub</span></a></li>
+      <li><a href="https://orcid.org/0000-0002-0064-3802" aria-label="ORCID profile" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 8v8M9 6.2h.01M12.4 8h2.1a4 4 0 0 1 0 8h-2.1V8Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>ORCID</span></a></li>
+      <li><a href="mailto:Omidard@biosustain.dtu.dk" aria-label="Send an email">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m3.5 7 8.5 6 8.5-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Email</span></a></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── METRICS ─────────────────────────────── -->
+<section class="metrics" aria-label="Key numbers">
+  <div class="wrap metric-grid">
+    <div class="metric reveal" data-reveal>
+      <span class="metric-num" data-count="12000" data-suffix="+">0</span>
+      <span class="metric-label"><em>E. coli</em> strain-specific<br>genome-scale models</span>
+    </div>
+    <div class="metric reveal" data-reveal data-reveal-delay="60">
+      <span class="metric-num" data-count="2300" data-suffix="+">0</span>
+      <span class="metric-label">Lactobacillaceae<br>genome-scale models</span>
+    </div>
+    <div class="metric reveal" data-reveal data-reveal-delay="120">
+      <span class="metric-num" data-count="10" data-suffix=" yrs">0</span>
+      <span class="metric-label">building computational<br>biology at scale</span>
+    </div>
+    <div class="metric reveal" data-reveal data-reveal-delay="180">
+      <span class="metric-num" data-count="7" data-suffix="">0</span>
+      <span class="metric-label">open tools, models<br>and databases shipped</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── WORK ─────────────────────────────── -->
+<section class="section" id="work">
+  <div class="wrap">
+    <header class="sec-head reveal" data-reveal>
+      <p class="kicker">01 — Work</p>
+      <h2>Models, pipelines and databases</h2>
+      <p class="sec-sub">
+        Everything below is public and runnable. The models are browsable in a web viewer, the
+        pipelines are open source, and the databases are citation-backed.
+      </p>
+    </header>
+
+    <div class="filters reveal" data-reveal role="tablist" aria-label="Filter work by category">
+      <button class="chip is-active" role="tab" aria-selected="true" data-filter="all">All</button>
+      <button class="chip" role="tab" aria-selected="false" data-filter="database">Databases</button>
+      <button class="chip" role="tab" aria-selected="false" data-filter="models">Models</button>
+      <button class="chip" role="tab" aria-selected="false" data-filter="pipeline">Pipelines</button>
+      <button class="chip" role="tab" aria-selected="false" data-filter="research">Research</button>
+    </div>
+
+    <div class="cards" id="cards">
+
+      <article class="card is-feature" data-cat="database" data-reveal>
+        <div class="card-top">
+          <span class="tag tag-accent">Flagship database</span>
+          <span class="tag">First author</span>
+        </div>
+        <h3>BiGG 2026</h3>
+        <p class="card-org">biggr.org</p>
+        <p>
+          The next-generation release of the <strong>BiGG Models database</strong>, the reference
+          repository for genome-scale metabolic models. A searchable home for curated models,
+          universal metabolite and reaction databases, genomes and compartments, cross-linked to
+          CHEBI, KEGG and MetaCyc. I wrote the pangenome-scale model-generation pipeline behind it.
+        </p>
+        <div class="card-links">
+          <a class="link-out" href="https://biggr.org" target="_blank" rel="noopener">
+            Open biggr.org
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <span class="pill">Paper in preparation</span>
+        </div>
+      </article>
+
+      <article class="card is-feature" data-cat="models" data-reveal data-reveal-delay="60">
+        <div class="card-top">
+          <span class="tag tag-accent">In-silico twins</span>
+          <span class="tag">Live browser</span>
+        </div>
+        <h3>panGEMs Browser</h3>
+        <p class="card-org">omidard.github.io/panGEMs</p>
+        <p>
+          A web browser over <strong>2,313 <em>E. coli</em></strong> and
+          <strong>2,346 Lactobacillaceae</strong> strain-specific genome-scale metabolic models.
+          Each model is a digital twin of one strain: it predicts what that organism can eat, what
+          it secretes, and which of its genes are essential.
+        </p>
+        <div class="card-links">
+          <a class="link-out" href="https://omidard.github.io/panGEMs/" target="_blank" rel="noopener">
+            Browse the models
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="link-out subtle" href="https://github.com/omidard/panGEMs" target="_blank" rel="noopener">Source</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="models" data-reveal data-reveal-delay="120">
+        <div class="card-top"><span class="tag">Models</span></div>
+        <h3>EcopanGEM</h3>
+        <p class="card-org">Pangenome-scale reconstruction of <em>E. coli</em> metabolism</p>
+        <p>
+          Reconstruction and analysis across roughly 12,000 <em>E. coli</em> strains: the largest
+          strain-resolved metabolic model collection assembled for a single bacterial species.
+        </p>
+        <div class="card-links">
+          <a class="link-out" href="https://github.com/omidard/EcopanGEM" target="_blank" rel="noopener">GitHub</a>
+          <a class="link-out subtle" href="https://omidard.github.io/EcopanGEM/" target="_blank" rel="noopener">Browser</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="models" data-reveal data-reveal-delay="180">
+        <div class="card-top"><span class="tag">Models</span></div>
+        <h3>LactoPanGEM</h3>
+        <p class="card-org">Pangenome reconstruction of Lactobacillaceae metabolism</p>
+        <p>
+          Roughly 2,300 models spanning the whole Lactobacillaceae family, predicting
+          species-specific metabolic traits. Published in <em>mSystems</em>.
+        </p>
+        <div class="card-links">
+          <a class="link-out" href="https://github.com/omidard/LactoPanGEM" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="pipeline" data-reveal data-reveal-delay="60">
+        <div class="card-top"><span class="tag">Pipeline</span></div>
+        <h3>PanGPSR</h3>
+        <p class="card-org">Gene to protein to structure to reaction, at pangenome scale</p>
+        <p>
+          Large-scale reconstruction that carries a gene all the way through its protein and
+          predicted 3D structure to the reaction it catalyzes, so function rests on structure
+          rather than on an annotation label copied from a homolog.
+        </p>
+        <div class="card-links">
+          <a class="link-out" href="https://github.com/omidard/PanGPSR" target="_blank" rel="noopener">GitHub</a>
+          <a class="link-out subtle" href="https://github.com/omidard/panGPSR-reconstruction" target="_blank" rel="noopener">Reconstruction</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="database" data-reveal data-reveal-delay="120">
+        <div class="card-top"><span class="tag">Database</span></div>
+        <h3>GrowthDB</h3>
+        <p class="card-org">Measured ground truth for metabolic models</p>
+        <p>
+          Experimental prokaryote growth rates, uptake and secretion rates, with media and culture
+          conditions, all referenced. This is the measurement a model prediction gets scored
+          against, which is what makes the prediction falsifiable.
+        </p>
+        <div class="card-links">
+          <a class="link-out" href="https://github.com/omidard/GrowthDB" target="_blank" rel="noopener">GitHub</a>
+          <a class="link-out subtle" href="https://omidard.github.io/GrowthDB/" target="_blank" rel="noopener">Site</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="database" data-reveal data-reveal-delay="180">
+        <div class="card-top"><span class="tag">Database</span></div>
+        <h3>Media</h3>
+        <p class="card-org">Citation-backed growth media, model-ready</p>
+        <p>
+          A curated library of growth and simulation media, every component mapped to a standard
+          BiGG exchange reaction and traced to its source. Part of a validation-data suite for
+          genome-scale models.
+        </p>
+        <div class="card-links">
+          <a class="link-out" href="https://github.com/omidard/Media" target="_blank" rel="noopener">GitHub</a>
+          <a class="link-out subtle" href="https://omidard.github.io/Media/" target="_blank" rel="noopener">Site</a>
+        </div>
+      </article>
+
+      <article class="card" data-cat="research" data-reveal data-reveal-delay="60">
+        <div class="card-top"><span class="tag tag-accent">Research</span></div>
+        <h3>Phylon decomposition</h3>
+        <p class="card-org">Non-negative matrix factorization of the <em>E. coli</em> pangenome</p>
+        <p>
+          Decomposing a pangenome with NMF pulls out latent structure, phylons, that no other
+          method surfaced: signals nobody imagined were recoverable from gene presence and absence
+          alone. This is the clearest evidence I have that machine learning does not just speed up
+          genomics, it sees things in it we could not.
+        </p>
+        <div class="card-links"><span class="pill">Under review</span></div>
+      </article>
+
+      <article class="card is-wide" data-cat="research" data-reveal data-reveal-delay="120">
+        <div class="card-top"><span class="tag tag-accent">Research</span><span class="tag">Science Advances 2026</span></div>
+        <h3>The genetic basis of metabolic function</h3>
+        <p class="card-org">Millions of genes, thousands of genomes</p>
+        <p>
+          The same enzyme activity can be encoded by genes that share almost no sequence. I search
+          millions of genes across thousands of genomes, test whether each is genuinely functional
+          rather than merely annotated, and map the full space of distinct genetic codes that
+          arrive at one and the same chemistry.
+        </p>
+        <div class="card-links">
+          <a class="link-out" href="https://doi.org/10.1126/sciadv.aeb3363" target="_blank" rel="noopener">
+            Science Advances
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── PAPERS ─────────────────────────────── -->
+<section class="section alt" id="papers">
+  <div class="wrap">
+    <header class="sec-head reveal" data-reveal>
+      <p class="kicker">02 — Publications</p>
+      <h2>Selected papers and IP</h2>
+      <p class="sec-sub">Full list on <a href="https://orcid.org/0000-0002-0064-3802" target="_blank" rel="noopener">ORCID</a>.</p>
+    </header>
+
+    <ol class="pubs">
+      <li class="pub is-highlight" data-reveal>
+        <span class="pub-year">2026</span>
+        <div class="pub-body">
+          <h3><a href="https://doi.org/10.1126/sciadv.aeb3363" target="_blank" rel="noopener">Annotating the pangenome reveals the diversity in the genetic basis for metabolic enzymes</a></h3>
+          <p class="pub-meta"><strong>Science Advances</strong> 12(27) · <span class="mono">10.1126/sciadv.aeb3363</span></p>
+          <p class="pub-role">First author</p>
+        </div>
+      </li>
+
+      <li class="pub" data-reveal data-reveal-delay="60">
+        <span class="pub-year">2026</span>
+        <div class="pub-body">
+          <h3>BiGG 2026: a pangenome-scale metabolic-model generation pipeline and the next-generation release of the BiGG Models database</h3>
+          <p class="pub-meta">In preparation · <a href="https://biggr.org" target="_blank" rel="noopener">biggr.org</a></p>
+          <p class="pub-role">First author, pipeline architect</p>
+        </div>
+      </li>
+
+      <li class="pub" data-reveal data-reveal-delay="120">
+        <span class="pub-year">2024</span>
+        <div class="pub-body">
+          <h3><a href="https://doi.org/10.1128/msystems.00156-24" target="_blank" rel="noopener">Pangenome reconstruction of Lactobacillaceae metabolism predicts species-specific metabolic traits</a></h3>
+          <p class="pub-meta"><strong>mSystems</strong> 9(7):e00156-24 · <span class="mono">10.1128/msystems.00156-24</span></p>
+          <p class="pub-role">First author</p>
+        </div>
+      </li>
+
+      <li class="pub" data-reveal data-reveal-delay="180">
+        <span class="pub-year">2021</span>
+        <div class="pub-body">
+          <h3><a href="https://doi.org/10.1016/j.bej.2021.107967" target="_blank" rel="noopener">Reconstruction and validation of a genome-scale metabolic model of <em>L. lactis</em> NCDO 2118; in-silico succinate and GABA overproduction</a></h3>
+          <p class="pub-meta"><strong>Biochemical Engineering Journal</strong> 170:107967 · <span class="mono">10.1016/j.bej.2021.107967</span></p>
+          <p class="pub-role">First author</p>
+        </div>
+      </li>
+
+      <li class="pub" data-reveal data-reveal-delay="240">
+        <span class="pub-year">Under<br>review</span>
+        <div class="pub-body">
+          <h3>Rare metabolic gene essentiality is a determinant of microniche adaptation in <em>E. coli</em></h3>
+          <p class="pub-meta">Open code: <a href="https://github.com/omidard/EcopanGEM" target="_blank" rel="noopener">EcopanGEM</a></p>
+          <p class="pub-role">First author</p>
+        </div>
+      </li>
+
+      <li class="pub" data-reveal data-reveal-delay="300">
+        <span class="pub-year">Under<br>review</span>
+        <div class="pub-body">
+          <h3>Phylon decomposition of the <em>E. coli</em> pangenome by non-negative matrix factorization</h3>
+          <p class="pub-meta">Machine learning applied to pangenome structure</p>
+          <p class="pub-role">Co-author</p>
+        </div>
+      </li>
+
+      <li class="pub is-patent" data-reveal data-reveal-delay="360">
+        <span class="pub-year">IP</span>
+        <div class="pub-body">
+          <h3>Lactobacillaceae-related patent</h3>
+          <p class="pub-meta">Main inventor; Notice of Invention filed, DTU.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── ABOUT ─────────────────────────────── -->
+<section class="section" id="about">
+  <div class="wrap about-wrap">
+    <header class="sec-head reveal" data-reveal>
+      <p class="kicker">03 — About</p>
+      <h2>Why I do this</h2>
+    </header>
+
+    <div class="prose reveal" data-reveal data-reveal-delay="60">
+      <p class="pull">
+        Ten years ago I was the first person in my department to do computational biology. There was
+        no course to take and nobody to learn it from, so I taught it to myself.
+      </p>
+      <p>
+        I did that because I believed a new Darwin would come out of computational biology, for one
+        reason: computation was the only way to look at life at a scale where the real patterns
+        become visible, and nothing else could give us that perception.
+      </p>
+      <p>
+        A decade later my conviction has changed shape. The data is here. What biology lacks is a
+        <strong>reasoning system that can work at this scale</strong>, and that is what machine
+        learning, and now language models, change. Decomposing bacterial genomes with non-negative
+        matrix factorization recovers signals nobody imagined were recoverable. And the agentic
+        research system I built on Claude Code mines public databases at a resolution nobody had the
+        throughput to reach. The knowledge was already sitting there. Nobody could get to it.
+      </p>
+      <p>
+        I did not arrive at computation from computer science. I trained in general biology,
+        molecular biology and biotechnology first, isolated bacteria at the bench, and took seven
+        strains from a flask to commercial production at a startup. That is why I know where a
+        prediction meets reality, and where it does not.
+      </p>
+      <p class="signature">
+        <span class="mono">Ph.D. Systems Biology, DTU · trained in the group of Prof. Bernhard O. Palsson</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── EXPERIENCE ─────────────────────────────── -->
+<section class="section alt" id="experience">
+  <div class="wrap">
+    <header class="sec-head reveal" data-reveal>
+      <p class="kicker">04 — Experience</p>
+      <h2>Where I have worked</h2>
+    </header>
+
+    <ol class="timeline">
+      <li data-reveal>
+        <span class="tl-when mono">2025 — now</span>
+        <div class="tl-body">
+          <h3>Postdoctoral Researcher</h3>
+          <p class="tl-org">DTU Biosustain / DTU BRIGHT, Technical University of Denmark</p>
+          <p>Pangenome-scale programs linking sequence and predicted structure to metabolic function; the pipeline behind BiGG 2026; the verification layer the group reuses.</p>
+        </div>
+      </li>
+      <li data-reveal data-reveal-delay="60">
+        <span class="tl-when mono">2025 — now</span>
+        <div class="tl-body">
+          <h3>Agentic AI systems for biology</h3>
+          <p class="tl-org">Independent work</p>
+          <p>A multi-agent research system on Claude Code that runs real computational biology, built around grounded verifiers: a model does not know when it is wrong, so the system checks the world, not the model.</p>
+        </div>
+      </li>
+      <li data-reveal data-reveal-delay="120">
+        <span class="tl-when mono">2021 — 2024</span>
+        <div class="tl-body">
+          <h3>Ph.D. Researcher, Systems Biology</h3>
+          <p class="tl-org">DTU, group of Prof. Bernhard O. Palsson</p>
+          <p>Built the E. coli and Lactobacillaceae panGEM collections and the reconstruction pipelines that made that scale possible.</p>
+        </div>
+      </li>
+      <li data-reveal data-reveal-delay="180">
+        <span class="tl-when mono">2019 — 2021</span>
+        <div class="tl-body">
+          <h3>R&amp;D Specialist, Strain Development</h3>
+          <p class="tl-org">Behdad Genetics Corp., a biotech startup</p>
+          <p>Isolated seven lactic acid bacteria strains and led their scale-up from laboratory to commercial production. Fermentation, QA/QC, GMP and GLP.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ─────────────────────────────── CONTACT ─────────────────────────────── -->
+<section class="section contact" id="contact">
+  <div class="wrap contact-inner reveal" data-reveal>
+    <h2>Let's talk</h2>
+    <p class="sec-sub">
+      Open to work on AI for scientific discovery. If you are building models that need to reason
+      about real biology, I would like to hear from you.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="mailto:Omidard@biosustain.dtu.dk">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m3.5 7 8.5 6 8.5-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Omidard@biosustain.dtu.dk
+      </a>
+      <a class="btn btn-ghost" href="Omid_Ardalani_CV.pdf">Download CV</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <p class="mono">© <span id="year">2026</span> Omid Ardalani · Kgs. Lyngby, Denmark</p>
+    <nav class="footer-links" aria-label="Elsewhere">
+      <a href="https://github.com/omidard" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://orcid.org/0000-0002-0064-3802" target="_blank" rel="noopener">ORCID</a>
+      <a href="https://biggr.org" target="_blank" rel="noopener">biggr.org</a>
+      <a href="https://omidard.github.io/panGEMs/" target="_blank" rel="noopener">panGEMs</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
