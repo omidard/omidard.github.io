@@ -636,7 +636,16 @@
   </figure>
 </div>
 
+<!-- The scrollytelling carries on down the margins: bits into a helix on the left,
+     a metabolic network growing branch by branch on the right. Purely decorative,
+     so it sits outside the reading order and takes no pointer events. -->
+<div class="rails" aria-hidden="true">
+  <canvas class="rail rail-l" id="rail-dna"></canvas>
+  <canvas class="rail rail-r" id="rail-net"></canvas>
+</div>
+
 <script src="script.js"></script>
 <script src="scene.js"></script>
+<script src="rails.js"></script>
 </body>
 </html>

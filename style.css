@@ -654,3 +654,41 @@ body.lb-open { overflow: hidden; }
   .ambient, .nav, .filters, .contact, .footer { display: none; }
   body { background: #fff; color: #000; }
 }
+
+/* ═══════════════════════ margin rails ═══════════════════════════════════════
+   The pipeline scrollytelling stopped at "01 — Work". From there down the page
+   has two empty margins, so they carry it on: bits assembling into a double
+   helix on the left, a metabolic network growing branch by branch on the right.
+
+   They exist ONLY where there is genuinely an empty margin to put them in. The
+   content column is --wrap wide, so each margin is (100vw - --wrap) / 2; below
+   about 1400px that is too thin to hold anything, and the rails simply are not
+   rendered rather than being squeezed against the text.
+
+   They sit ABOVE the section backgrounds on purpose: .section.alt paints an
+   opaque white full-bleed background in the light theme, and a rail behind it
+   would be visible in the dark theme and invisible in the light one. Above, with
+   pointer-events: none, is honest in both — and they never overlap the column. */
+.rails {
+  display: none;
+  position: fixed; inset: 0;
+  z-index: 1;                 /* over the section backgrounds, under the nav (100) */
+  pointer-events: none;
+}
+.rail {
+  position: absolute; top: 0;
+  height: 100vh;
+  width: min(calc((100vw - var(--wrap)) / 2), 260px);
+}
+.rail-l { left: 0; }
+.rail-r { right: 0; }
+
+@media (min-width: 1400px) {
+  .rails { display: block; }
+}
+
+/* A rail that never moves is just clutter, so under reduced motion it draws one
+   still frame (rails.js stops the loop) and is dialled back to a watermark. */
+@media (prefers-reduced-motion: reduce) {
+  .rail { opacity: 0.5; }
+}
