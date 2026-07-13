@@ -305,8 +305,11 @@ main, .nav, .footer { position: relative; z-index: 1; }
   -webkit-backdrop-filter: blur(10px);
 }
 .scrolly-copy h2 { margin-bottom: var(--sp-3); font-size: clamp(1.6rem, 3vw, 2.3rem); }
+/* Reserve the tallest act's body. Without it the card swings 140px between acts and
+   snaps as you scrub, because nothing transitions height. Measured: the longest body is
+   11 lines on every breakpoint, which is 18.2em at both the desktop and the phone size. */
 .act-body {
-  color: var(--fg-mute); margin-bottom: var(--sp-5); min-height: 5.6em;
+  color: var(--fg-mute); margin-bottom: var(--sp-5); min-height: 16.5em;
   transition: opacity var(--t-mid) var(--ease);
 }
 .act-stats {
@@ -382,17 +385,36 @@ main, .nav, .footer { position: relative; z-index: 1; }
   .scrolly-sticky {
     display: flex; flex-direction: column;
     justify-content: flex-start; align-items: center;
-    padding-top: var(--sp-5);
+    padding: var(--sp-3) 0;
   }
+  /* The card is a fixed block of type. Give the SCENE the remainder rather than a fixed
+     share, or on a short phone (an SE is 667px) there is no scene height that fits and the
+     copy gets clipped by the pane. It shrinks, the text always survives. */
   #scene {
     position: relative; inset: auto;
-    width: 100%; height: 42svh; flex: none;
+    width: 100%; flex: 1 1 auto; min-height: 130px;
   }
   .scrolly-copy {
-    justify-self: center; margin: var(--sp-4) 0 0;
-    width: min(46ch, 92vw); padding: var(--sp-5);
+    flex: none;
+    justify-self: center; margin: var(--sp-3) 0 0;
+    width: min(46ch, 92vw); padding: var(--sp-4);
   }
-  .act-body { min-height: 7em; font-size: 0.94rem; }
+  /* measured: the tallest body is 14.9em at this font and card width, not the 16.5em
+     the desktop needs, so the phone reserved 40px of dead air under every act. */
+  .act-body { font-size: 0.88rem; min-height: 14.9em; }
+  /* act VI's edit list wraps to two lines here and nothing else does, so the row is
+     reserved as well: otherwise that one card is 26px taller than the other six. */
+  .act-stats { min-height: 5.3em; }
+  /* The kicker already names the act, and seven identical copies of this heading cost a
+     phone 74px it has not got. Hidden to the eye, kept in the a11y tree, since the section
+     is labelled by it. (The comment goes ABOVE the block: put it after the brace and it
+     swallows every declaration up to its closing star-slash, which is what happened here.) */
+  .scrolly-copy h2 {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden; white-space: nowrap;
+    clip-path: inset(50%);
+  }
   .scrolly-rail { display: none; }
   .scrolly-steps { display: none; }    /* seven chips will not fit; the card names the act */
 }

@@ -1600,6 +1600,9 @@
        12,340 media                      -> Media/data/index.json  (the repo README still
                                             says 11,367; the README is the stale one)
        9,706 measured rates              -> GrowthDB/data/index.json (n_total_rates)
+       11,000 rare genes / 35 reactions  -> the abstract of sciadv.aeb3363 itself. Its
+                                            2,377 genomes are NOT act III's 2,313 models:
+                                            different sets, so the two are never mixed.
      The Input/Output chips annotate what is on screen. The prose says what it is built
      out of, and the link goes to the thing itself. */
   var ACTS = [
@@ -1621,8 +1624,9 @@
     },
     {
       k: 'Act IV · The cell',
-      b: 'The map is not the point. A membrane closes around the network and it becomes an organism: it swims, it finds sugar in the medium, and it eats. Every reaction inside it still traces back to a gene through its GPR rule, which is the only reason a knockout means anything.',
-      a: 'a model', bl: 'an organism', l: []
+      b: 'The map is not the point. A membrane closes around the network and it becomes an organism: it swims, it finds sugar, and it eats. Every reaction in it traces back to a gene through its GPR rule, which is the only reason a knockout means anything. Annotate a whole pangenome and the gene layer comes out far noisier than the reaction layer: 11,000 rare metabolic genes, 35 rare reactions.',
+      a: 'a model', bl: 'an organism',
+      l: [['Science Advances 2026', 'https://doi.org/10.1126/sciadv.aeb3363']]
     },
     {
       k: 'Act V · Uptake and secretion',
@@ -1639,8 +1643,9 @@
     },
     {
       k: 'Act VII · Scale',
-      b: 'And then pull back. A cell is two micrometres and the vessel it lives in is two metres, and the zoom out is honest the whole way: the field of view is printed on screen, and by the time the fermenter is in frame a cell is a small fraction of a single pixel. A bioreactor looks like cloudy water. Predicting what is going on inside it is the job.',
-      a: '2 µm', bl: '2 m · ×1,000,000', l: []
+      b: 'And then pull back. Two micrometres becomes two metres and the zoom stays honest all the way, until a cell is a fraction of one pixel and the vessel is nothing but cloudy water. You cannot watch the strain you designed, so it has to be right before it goes in. Genome, model, medium, and the few edits that make a cell factory: I have run that chain to a succinate overproducer.',
+      a: '2 µm', bl: '2 m · ×1,000,000',
+      l: [['Biochem Eng J 2021', 'https://doi.org/10.1016/j.bej.2021.107967']]
     }
   ];
 
