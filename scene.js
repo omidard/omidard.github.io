@@ -31,6 +31,13 @@
 
   /* ---------------------------------------------------------------- theme */
   var C = {};
+  function hex2rgb(h) {
+    h = (h || '#000').replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var n = parseInt(h, 16) || 0;
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
   function readTheme() {
     var s = getComputedStyle(document.documentElement);
     var g = function (n) { return s.getPropertyValue(n).trim(); };
@@ -40,7 +47,12 @@
     C.accent = g('--accent');
     C.border = g('--border');
     C.bad = g('--bad');
+    C.bg = g('--bg');
     C.dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    C.rgb = {                              // parsed once per theme, not once per stroke
+      fg: hex2rgb(C.fg), mute: hex2rgb(C.mute), primary: hex2rgb(C.primary),
+      accent: hex2rgb(C.accent), bad: hex2rgb(C.bad), bg: hex2rgb(C.bg)
+    };
   }
   readTheme();
   new MutationObserver(readTheme).observe(document.documentElement, {
@@ -284,216 +296,514 @@
     ctx.restore();
   }
 
-  /* ------------------------------ act III: pangenome -> metabolic network */
-  // Real central carbon metabolism, real BiGG identifiers.
+  /* ══════════════════════════════════════════════════════════════════════════
+     THE MAP  ·  acts III to VII all draw this one object
+
+     A real metabolic map, not a sketch of one. Three things separate the two, and
+     the first version had none of them:
+
+       - The TCA cycle is a CIRCLE, drawn as arc segments. It used to be an ellipse
+         (rx 0.22, ry 0.32) with bezier bows bolted onto each edge, and a bow whose
+         bulge is measured along the +x radius is wrong in every direction except
+         horizontal — which is exactly why it rendered as a lumpy polygon.
+       - Acetyl-CoA condenses ONTO oxaloacetate as a side input, the way an Escher
+         map draws it, instead of being a second arrow into citrate dragged across
+         the whole diagram.
+       - Every reaction carries the cofactor it actually turns over. The little
+         cofactor arcs are most of what makes a metabolic map read as a metabolic
+         map rather than a node-link toy.
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  var TAU = Math.PI * 2;
+
+  /* tier 2 = a branch point you have to name, 1 = on the path, 0 = leaves the cell */
   var N = {};
-  function node(id, x, y) { N[id] = { id: id, x: x, y: y }; }
-
-  node('glc__D_e', 0.08, 0.05); node('g6p_c', 0.08, 0.20);
-  node('f6p_c', 0.08, 0.35);    node('fdp_c', 0.08, 0.50);
-  node('g3p_c', 0.08, 0.65);    node('pep_c', 0.10, 0.80);
-  node('pyr_c', 0.17, 0.94);    node('accoa_c', 0.37, 0.94);
-  node('ac_e', 0.28, 0.73);     node('co2_e', 0.50, 0.07);
-
-  // The TCA cycle, laid out as an actual circle so it reads as a cycle.
-  // Order round the ring is the real one: cit -> icit -> akg -> succoa ->
-  // succ -> fum -> mal -> oaa -> back to cit.
-  var TCA_C = { x: 0.74, y: 0.45, rx: 0.22, ry: 0.32 };
-  var TCA = ['cit_c', 'icit_c', 'akg_c', 'succoa_c', 'succ_c', 'fum_c', 'mal__L_c', 'oaa_c'];
-  var inRing = {};
-  for (var q = 0; q < TCA.length; q++) {
-    var rad = (180 + q * 45) * Math.PI / 180;
-    node(TCA[q], TCA_C.x + Math.cos(rad) * TCA_C.rx, TCA_C.y + Math.sin(rad) * TCA_C.ry);
-    inRing[TCA[q]] = true;
+  function node(id, x, y, tier, label) {
+    N[id] = { id: id, x: x, y: y, tier: tier, label: label };
   }
 
-  var EDGES = [
-    ['glc__D_e', 'g6p_c', 'GLCpts', 1.00], ['g6p_c', 'f6p_c', 'PGI', 0.92],
-    ['f6p_c', 'fdp_c', 'PFK', 0.92], ['fdp_c', 'g3p_c', 'FBA', 0.92],
-    ['g3p_c', 'pep_c', 'ENO', 0.95], ['pep_c', 'pyr_c', 'PYK', 0.80],
-    ['pyr_c', 'accoa_c', 'PDH', 0.74], ['accoa_c', 'cit_c', 'CS', 0.62],
-    ['cit_c', 'icit_c', 'ACONTb', 0.60], ['icit_c', 'akg_c', 'ICDHyr', 0.58],
-    ['akg_c', 'succoa_c', 'AKGDH', 0.50], ['succoa_c', 'succ_c', 'SUCOAS', 0.50],
-    ['succ_c', 'fum_c', 'SUCDi', 0.48], ['fum_c', 'mal__L_c', 'FUM', 0.48],
-    ['mal__L_c', 'oaa_c', 'MDH', 0.48], ['oaa_c', 'cit_c', 'CS', 0.44],
-    ['accoa_c', 'ac_e', 'ACKr', 0.34], ['icit_c', 'co2_e', 'CO2t', 0.30]
+  /* Laid out WIDE, on purpose. A square map forces a square cell, and a square cell
+     is a coccus — the first cut of this drew a 1.2:1 blob and called it a bacillus.
+     Glycolysis descends on a diagonal instead of a column, the cycle sits to its
+     right, and the whole map comes out near 1.4:1, which a proper rod can hold. */
+  node('g6p',    0.05, 0.20, 1, 'G6P');
+  node('f6p',    0.11, 0.29, 1, 'F6P');
+  node('fdp',    0.17, 0.38, 1, 'FBP');
+  node('g3p',    0.23, 0.47, 1, 'G3P');
+  node('pep',    0.29, 0.56, 2, 'PEP');
+  node('pyr',    0.31, 0.78, 2, 'PYR');
+  node('accoa',  0.40, 0.69, 2, 'AcCoA');
+  node('ac',     0.34, 0.92, 0, 'acetate');
+  node('co2',    0.88, 0.12, 0, 'CO₂');
+  node('succ_e', 1.02, 0.72, 0, 'succinate');
+
+  // the cycle: eight nodes, 45° apart, oxaloacetate at nine o'clock, running clockwise
+  var RING = ['oaa', 'cit', 'icit', 'akg', 'succoa', 'succ', 'fum', 'mal'];
+  var RLAB = ['OAA', 'CIT', 'ICIT', 'αKG', 'SucCoA', 'SUC', 'FUM', 'MAL'];
+  var TCA_C = { x: 0.72, y: 0.50, r: 0.235 };
+  var ANG = {}, RNEXT = {};
+  (function () {
+    for (var q = 0; q < RING.length; q++) {
+      var a = (180 + q * 45) * Math.PI / 180;     // monotone: mal -> oaa needs no wrap
+      ANG[RING[q]] = a;
+      RNEXT[RING[q]] = RING[(q + 1) % RING.length];
+      node(RING[q], TCA_C.x + Math.cos(a) * TCA_C.r,
+                    TCA_C.y + Math.sin(a) * TCA_C.r, 1, RLAB[q]);
+    }
+  })();
+
+  /* from, to, enzyme, flux, cofactor, which side of the arrow it hangs on, bow */
+  var RXN = [
+    ['g6p',    'f6p',    'PGI', 0.92, '',       0,  0],
+    ['f6p',    'fdp',    'PFK', 0.92, 'ATP',   -1,  0],
+    ['fdp',    'g3p',    'FBA', 0.92, '',       0,  0],
+    ['g3p',    'pep',    'ENO', 0.95, 'NADH',  -1,  0],
+    ['pep',    'pyr',    'PYK', 0.80, 'ATP',   -1,  0],
+    ['pyr',    'accoa',  'PDH', 0.74, 'NADH',   1,  0],
+    ['accoa',  'ac',     'ACK', 0.34, 'ATP',   -1, -0.05],
+    ['pep',    'oaa',    'PPC', 0.00, 'CO₂',   -1,  0.07],
+    ['oaa',    'cit',    'CS',  0.62, '',       0,  0],
+    ['cit',    'icit',   'ACN', 0.60, '',       0,  0],
+    ['icit',   'akg',    'ICD', 0.58, 'NADH',   1,  0],
+    ['icit',   'co2',    '',    0.26, '',       0,  0.06],
+    ['akg',    'succoa', 'KGD', 0.50, 'NADH',   1,  0],
+    ['succoa', 'succ',   'SCS', 0.50, 'ATP',    1,  0],
+    ['succ',   'fum',    'SDH', 0.48, 'FADH₂',  1,  0],
+    ['fum',    'mal',    'FUM', 0.48, '',       0,  0],
+    ['mal',    'oaa',    'MDH', 0.48, 'NADH',   1,  0]
   ];
+  var SIDE_IN = [{ from: 'accoa', rxn: 'CS' }];        // acetyl-CoA onto oxaloacetate
 
-  function netXY(n) {
-    var bw = Math.min(W * (small ? 0.86 : 0.52), 620);
-    var bh = Math.min(H * 0.74, 560);
-    var ox = small ? (W - bw) / 2 : W * 0.66 - bw / 2;
-    var oy = (H - bh) / 2;
-    return { x: ox + n.x * bw, y: oy + n.y * bh };
+  /* The engineering. Knock out pyruvate kinase so PEP cannot drain to pyruvate, and
+     acetate kinase so the carbon cannot leak out as overflow. Turn ON PEP carboxylase,
+     which carboxylates the PEP straight to oxaloacetate. Then run the reductive arm of
+     the cycle BACKWARDS: oaa -> mal -> fum -> succ. That is the textbook succinate
+     strain, and it is the reason the bottom-left of the ring reverses on screen. */
+  var KO   = { PYK: 1, ACK: 1 };
+  var ON   = { PPC: 0.86 };                            // dark in the wild type
+  var PUSH = { MDH: 1, FUM: 1, SDH: 1 };               // and these three run the other way
+  var DES_RXN = [['succ', 'succ_e', 'SUCCt', 0.88, '', 0, 0]];
+
+  /* ---------------------------------------------------------------- colour */
+  function RGBA(name, a) {
+    var c = C.rgb[name];
+    return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')';
   }
 
+  /* ------------------------------------------------------------- geometry */
   function qbez(p0, c, p1, u) {
     var m = 1 - u;
+    return { x: m * m * p0.x + 2 * m * u * c.x + u * u * p1.x,
+             y: m * m * p0.y + 2 * m * u * c.y + u * u * p1.y };
+  }
+
+  // the map box is SQUARE, so a circle in map space is a circle on screen
+  function netXY(n) {
+    var bs = Math.min(W * (small ? 0.95 : 0.58), H * 0.90, 720);
+    var ox = (small ? W * 0.5 : W * 0.66) - bs / 2, oy = H * 0.5 - bs / 2;
+    return { x: ox + n.x * bs, y: oy + n.y * bs };
+  }
+
+  function ringGeom(map) {
+    var c = map({ x: TCA_C.x, y: TCA_C.y });
+    var e = map({ x: TCA_C.x + TCA_C.r, y: TCA_C.y });
+    return { x: c.x, y: c.y, r: Math.hypot(e.x - c.x, e.y - c.y) };
+  }
+
+  /* An edge is either an arc of the cycle or a quadratic. Both answer at(u) and
+     tan(u), so everything downstream — arrowheads, cofactor arcs, flux comets —
+     is written once and does not care which it is looking at. */
+  function edgeGeom(R, pos, rg, rot) {
+    var ia = R[0], ib = R[1];
+    if (RNEXT[ia] === ib && !pos.pinned[ia] && !pos.pinned[ib]) {
+      var a0 = ANG[ia] + rot, a1 = a0 + Math.PI / 4;
+      return {
+        ring: true, c: rg, a0: a0, a1: a1,
+        at: function (u) {
+          var t = a0 + (a1 - a0) * u;
+          return { x: rg.x + Math.cos(t) * rg.r, y: rg.y + Math.sin(t) * rg.r };
+        },
+        tan: function (u) {
+          var t = a0 + (a1 - a0) * u;
+          return { x: -Math.sin(t), y: Math.cos(t) };
+        }
+      };
+    }
+    var a = pos(ia), b = pos(ib);
+    var dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1;
+    var bow = R[6] || 0;
+    var cp = { x: (a.x + b.x) / 2 - dy * bow, y: (a.y + b.y) / 2 + dx * bow };
     return {
-      x: m * m * p0.x + 2 * m * u * c.x + u * u * p1.x,
-      y: m * m * p0.y + 2 * m * u * c.y + u * u * p1.y
+      ring: false, a: a, b: b, cp: cp,
+      at: function (u) { return qbez(a, cp, b, u); },
+      tan: function (u) {
+        var m = 1 - u;
+        var tx = 2 * m * (cp.x - a.x) + 2 * u * (b.x - cp.x);
+        var ty = 2 * m * (cp.y - a.y) + 2 * u * (b.y - cp.y);
+        var l = Math.hypot(tx, ty) || 1;
+        return { x: tx / l, y: ty / l };
+      }
     };
   }
 
-  /* Control point for an edge.
-     Inside the TCA ring the chord must bow OUT to the circle, or the cycle
-     collapses into a crossed mess. Push the chord midpoint radially away from
-     the ring centre by twice the sagitta, and the quadratic lands on the arc.
-     Everything else gets a gentle, length-independent bow. */
-  /* The TCA bow has to be computed in whatever space the ring is CURRENTLY drawn in.
-     Acts IV to VI carry the same ring into the cytoplasm, and a control point that
-     still assumes the act III layout would collapse the cycle into a crossed mess
-     the moment the network moves. So the mapper is a parameter. */
-  function ctrlM(ida, idb, a, b, map) {
-    var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-    if (inRing[ida] && inRing[idb]) {
-      var c = map({ x: TCA_C.x, y: TCA_C.y });
-      var vx = mx - c.x, vy = my - c.y;
-      var d = Math.hypot(vx, vy) || 1;
-      var rr = map({ x: TCA_C.x + TCA_C.rx, y: TCA_C.y });
-      var R = Math.hypot(rr.x - c.x, rr.y - c.y);
-      var out = 2 * (R - d);
-      return { x: mx + (vx / d) * out, y: my + (vy / d) * out };
+  function trace(g) {
+    if (g.ring) {
+      var s = g.at(0);
+      ctx.moveTo(s.x, s.y);
+      ctx.arc(g.c.x, g.c.y, g.c.r, g.a0, g.a1, false);
+    } else {
+      ctx.moveTo(g.a.x, g.a.y);
+      ctx.quadraticCurveTo(g.cp.x, g.cp.y, g.b.x, g.b.y);
     }
-    var dx = b.x - a.x, dy = b.y - a.y;
-    var len = Math.hypot(dx, dy) || 1;
-    return { x: mx - (dy / len) * len * 0.05, y: my + (dx / len) * len * 0.05 };
   }
 
-  function control(ida, idb, a, b) {
-    var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-    if (inRing[ida] && inRing[idb]) {
-      var c = netXY({ x: TCA_C.x, y: TCA_C.y });
-      var vx = mx - c.x, vy = my - c.y;
-      var d = Math.hypot(vx, vy) || 1;
-      var rr = netXY({ x: TCA_C.x + TCA_C.rx, y: TCA_C.y });
-      var R = Math.hypot(rr.x - c.x, rr.y - c.y);
-      var out = 2 * (R - d);
-      return { x: mx + (vx / d) * out, y: my + (vy / d) * out };
+  /* ══════════════════════════════════════════════════════════════════════════
+     PAINT  ·  one renderer, every act
+
+     o.map      map-space -> screen
+     o.alpha    act opacity
+     o.t        clock
+     o.size     the map's width on screen, in px: everything scales off this and
+                detail drops out as it shrinks, so nothing ever draws at 4px
+     o.grow     fn(i) -> 0..1, the build-in (act III)
+     o.des      0..1, how far the strain design has been applied
+     o.pin      { id: {x,y} } — terminals nailed to the membrane, inside the cell
+     ══════════════════════════════════════════════════════════════════════════ */
+  function paintMap(o) {
+    var al = o.alpha, t = o.t, sc = clamp(o.size / 560, 0.34, 1.15);
+    var des = o.des || 0;
+    var pin = o.pin || {};
+    var pos = function (id) { return pin[id] || o.map(N[id]); };
+    pos.pinned = pin;
+    var rg = ringGeom(o.map);
+    var grow = o.grow || function () { return 1; };
+
+    var lab = o.size > 330 && !small;                  // metabolite names
+    var det = o.size > 430 && !small;                  // enzymes and cofactors
+    var lit = C.dark ? 'lighter' : 'source-over';      // real additive bloom on dark
+
+    var RX = RXN.concat(des > 0.02 ? DES_RXN : []);
+    var geo = [], st = [];
+    for (var i = 0; i < RX.length; i++) {
+      var R = RX[i], nm = R[2];
+      var ko = KO[nm] ? des : 0;
+      var pu = PUSH[nm] ? des : 0;
+      var born = nm === 'SUCCt' ? des : 1;
+      var base = ON[nm] !== undefined ? lerp(R[3], ON[nm], des) : R[3];
+      geo.push(edgeGeom(R, pos, rg, o.map.ang || 0));
+      st.push({
+        f: base * (1 - ko) * (1 + 0.55 * pu) * born,
+        ko: ko, push: pu, rev: pu > 0.5 ? 1 : 0,
+        g: clamp(grow(i), 0, 1)
+      });
     }
-    var dx = b.x - a.x, dy = b.y - a.y;
-    var len = Math.hypot(dx, dy) || 1;
-    return { x: mx - (dy / len) * len * 0.05, y: my + (dx / len) * len * 0.05 };
-  }
 
-  function drawNetwork(p, t, alpha) {
-    if (alpha <= 0.001) return;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.lineCap = 'round';
-
-    // edges draw themselves in, staggered
-    for (var e = 0; e < EDGES.length; e++) {
-      var ed = EDGES[e];
-      var a = netXY(N[ed[0]]), b = netXY(N[ed[1]]);
-      var flux = ed[3];
-      // Front-loaded. The old ramp had the first edge still at 40% when the pangenome
-      // had already faded to nothing, so the hand-over landed on a bare canvas.
-      var grow = clamp((p - (e / EDGES.length) * 0.30) / 0.22, 0, 1);
-      if (grow <= 0) continue;
-
-      var c0 = control(ed[0], ed[1], a, b);
-
-      ctx.globalAlpha = alpha * (0.16 + 0.30 * flux) * grow;
-      ctx.strokeStyle = C.fg;
-      ctx.lineWidth = 0.9 + flux * 1.5;
+    // ── 1. bloom. A wide, soft, additive pass under everything: this is the single
+    //       biggest difference between a diagram and something that looks lit.
+    ctx.globalCompositeOperation = lit;
+    for (var i = 0; i < RX.length; i++) {
+      var s = st[i];
+      if (s.g <= 0.02 || s.f <= 0.02) continue;
       ctx.beginPath();
-      var steps = 20;
-      for (var i = 0; i <= steps; i++) {
-        var pt = qbez(a, c0, b, (i / steps) * easeOut(grow));
-        if (i === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
-      }
+      trace(geo[i]);
+      ctx.strokeStyle = s.push > 0.05 ? RGBA('accent', 0.10 * al * s.f)
+                                      : RGBA('primary', 0.09 * al * s.f);
+      ctx.lineWidth = (5 + 9 * s.f) * sc;
+      ctx.lineCap = 'round';
       ctx.stroke();
+    }
+    ctx.globalCompositeOperation = 'source-over';
 
-      // flux: particles moving through the reaction, faster where flux is higher
-      if (grow > 0.96) {
-        var per = 2;
-        for (var k = 0; k < per; k++) {
-          var u = ((t * (0.10 + flux * 0.18) + k / per + e * 0.13) % 1);
-          var fp = qbez(a, c0, b, u);
-          ctx.globalAlpha = alpha * (0.5 + 0.5 * Math.sin(u * Math.PI)) * 0.95;
-          ctx.fillStyle = C.accent;
+    // ── 2. the reactions themselves
+    for (var i = 0; i < RX.length; i++) {
+      var R = RX[i], s = st[i], g = geo[i];
+      if (s.g <= 0.02) continue;
+      if (s.f <= 0.02 && s.ko < 0.05) continue;
+
+      ctx.beginPath();
+      if (s.g >= 0.999) {
+        trace(g);
+      } else {                                        // drawing itself in
+        var steps = 16, e0 = easeOut(s.g);
+        for (var k = 0; k <= steps; k++) {
+          var q = g.at((k / steps) * e0);
+          if (k === 0) ctx.moveTo(q.x, q.y); else ctx.lineTo(q.x, q.y);
+        }
+      }
+      if (s.ko > 0.05) {
+        ctx.setLineDash([3, 5]);
+        ctx.strokeStyle = RGBA('bad', al * 0.5 * s.ko);
+        ctx.lineWidth = 1.3 * sc;
+      } else {
+        ctx.setLineDash([]);
+        ctx.strokeStyle = s.push > 0.05 ? RGBA('accent', al * (0.55 + 0.4 * s.f))
+                                        : RGBA('primary', al * (0.45 + 0.4 * s.f));
+        ctx.lineWidth = (1.1 + 2.4 * s.f) * sc;
+      }
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // ── 3. arrowheads. A metabolic map without them is a graph, not a pathway.
+    ctx.beginPath();
+    var headsPush = [];
+    for (var i = 0; i < RX.length; i++) {
+      var s = st[i], g = geo[i];
+      if (s.g < 0.94 || s.f <= 0.03) continue;
+      var u = s.rev ? 0.055 : 0.945;
+      var p0 = g.at(u), tg = g.tan(u);
+      var dir = s.rev ? -1 : 1;
+      var hx = tg.x * dir, hy = tg.y * dir;
+      var w = (2.4 + 2.0 * s.f) * sc, ln = (6 + 4 * s.f) * sc;
+      var tri = [
+        p0.x + hx * ln * 0.5, p0.y + hy * ln * 0.5,
+        p0.x - hx * ln * 0.5 - hy * w, p0.y - hy * ln * 0.5 + hx * w,
+        p0.x - hx * ln * 0.5 + hy * w, p0.y - hy * ln * 0.5 - hx * w
+      ];
+      if (s.push > 0.05) { headsPush.push(tri); continue; }
+      ctx.moveTo(tri[0], tri[1]); ctx.lineTo(tri[2], tri[3]); ctx.lineTo(tri[4], tri[5]);
+      ctx.closePath();
+    }
+    ctx.fillStyle = RGBA('primary', al * 0.85);
+    ctx.fill();
+    if (headsPush.length) {
+      ctx.beginPath();
+      for (var i = 0; i < headsPush.length; i++) {
+        var q = headsPush[i];
+        ctx.moveTo(q[0], q[1]); ctx.lineTo(q[2], q[3]); ctx.lineTo(q[4], q[5]); ctx.closePath();
+      }
+      ctx.fillStyle = RGBA('accent', al * 0.9);
+      ctx.fill();
+    }
+
+    // ── 4. cofactor arcs. NADH coming off a dehydrogenase, ATP off a kinase, CO₂ off
+    //       a decarboxylase — drawn as the little half-loops an Escher map hangs on
+    //       the arrow. This is the detail that makes it read as a real map.
+    if (det) {
+      ctx.font = '500 8.5px "Roboto Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (var i = 0; i < RX.length; i++) {
+        var R = RX[i], s = st[i], g = geo[i];
+        if (!R[4] || s.g < 0.9 || s.f <= 0.04) continue;
+        var m = g.at(0.5), tg = g.tan(0.5), sd = R[5];
+        var nx = -tg.y * sd, ny = tg.x * sd;
+        var r = 7 * sc, bulge = 15 * sc;
+        ctx.beginPath();
+        ctx.moveTo(m.x - tg.x * r, m.y - tg.y * r);
+        ctx.quadraticCurveTo(m.x + nx * bulge, m.y + ny * bulge,
+                             m.x + tg.x * r, m.y + tg.y * r);
+        ctx.strokeStyle = RGBA('mute', al * 0.45);
+        ctx.lineWidth = 1 * sc;
+        ctx.stroke();
+        ctx.fillStyle = RGBA('mute', al * 0.72);
+        ctx.fillText(R[4], m.x + nx * (bulge + 8), m.y + ny * (bulge + 8));
+      }
+    }
+
+    // ── 5. the acetyl-CoA side input, feeding citrate synthase
+    if (des < 0.9) {
+      for (var i = 0; i < SIDE_IN.length; i++) {
+        var S = SIDE_IN[i], target = -1;
+        for (var k = 0; k < RX.length; k++) if (RX[k][2] === S.rxn) target = k;
+        if (target < 0 || st[target].g < 0.6) continue;
+        var from = pos(S.from), m = geo[target].at(0.5);
+        var hx = (from.x + m.x) / 2, hy = (from.y + m.y) / 2;
+        var px = -(m.y - from.y), py = (m.x - from.x);
+        // point the bow away from the ring centre: straight through, it lands on OAA
+        var away = (hx - rg.x) * px + (hy - rg.y) * py < 0 ? -0.26 : 0.26;
+        var mid = { x: hx + px * away, y: hy + py * away };
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.quadraticCurveTo(mid.x, mid.y, m.x, m.y);
+        ctx.strokeStyle = RGBA('primary', al * 0.30 * st[target].f);
+        ctx.lineWidth = 1.2 * sc;
+        ctx.stroke();
+        for (var k = 0; k < 2; k++) {                  // and it flows
+          var u = (t * 0.20 + k / 2) % 1;
+          var q = qbez(from, mid, m, u);
           ctx.beginPath();
-          ctx.arc(fp.x, fp.y, 1.5 + flux * 1.6, 0, Math.PI * 2);
+          ctx.arc(q.x, q.y, 1.6 * sc, 0, TAU);
+          ctx.fillStyle = RGBA('primary', al * 0.7);
           ctx.fill();
         }
       }
-
-      // reaction id, on the higher-flux reactions only, so it never turns to soup.
-      // Sits on the outside of the curve, not on top of it.
-      if (!small && grow > 0.99 && flux >= 0.58) {
-        var lp = qbez(a, c0, b, 0.5);
-        var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-        var ox = lp.x - mx, oy = lp.y - my;
-        var ol = Math.hypot(ox, oy);
-        var nx, ny;
-        if (ol > 1) { nx = ox / ol; ny = oy / ol; }
-        else {
-          var ex = b.x - a.x, ey = b.y - a.y, el = Math.hypot(ex, ey) || 1;
-          nx = -ey / el; ny = ex / el;
-        }
-        ctx.globalAlpha = alpha * 0.62;
-        ctx.fillStyle = C.mute;
-        ctx.font = '500 10px "Roboto Mono", monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(ed[2], lp.x + nx * 11, lp.y + ny * 11);
-      }
     }
 
-    // metabolite nodes
-    var pop = band(p, 0.08, 0.60);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
+    // ── 6. flux, as light. Tapered comets, not dots: a streak reads as a direction
+    //       even in a still frame, and a dot never does.
+    if (o.flux !== false) {
+      ctx.globalCompositeOperation = lit;
+      for (var pass = 0; pass < 2; pass++) {
+        var col = pass ? 'accent' : 'primary';
+        ctx.beginPath();
+        for (var i = 0; i < RX.length; i++) {
+          var s = st[i], g = geo[i];
+          if (s.g < 0.9 || s.f <= 0.03) continue;
+          if ((s.push > 0.05) !== (pass === 1)) continue;
+          var np = 1 + Math.round(s.f * 3);
+          for (var k = 0; k < np; k++) {
+            var u = (t * (0.13 + 0.09 * s.f) + i * 0.37 + k / np) % 1;
+            if (s.rev) u = 1 - u;
+            var tail = clamp(u - (s.rev ? -0.07 : 0.07), 0, 1);
+            var h = g.at(u), l = g.at(tail);
+            var dx = h.x - l.x, dy = h.y - l.y, dl = Math.hypot(dx, dy) || 1;
+            var nx = -dy / dl, ny = dx / dl;
+            var w = (1.2 + 1.5 * s.f) * sc;
+            ctx.moveTo(l.x, l.y);
+            ctx.lineTo(h.x + nx * w, h.y + ny * w);
+            ctx.lineTo(h.x - nx * w, h.y - ny * w);
+            ctx.closePath();
+          }
+        }
+        ctx.fillStyle = RGBA(col, al * 0.85);
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // ── 7. metabolites. A disc, a rim, and a specular highlight up and to the left,
+    //       which is the whole trick that turns a flat circle into a sphere.
     var ids = Object.keys(N);
-    for (var n = 0; n < ids.length; n++) {
-      var nd = N[ids[n]];
-      var pt = netXY(nd);
-      var u2 = easeOut(clamp((pop - (n / ids.length) * 0.35) / 0.5, 0, 1));
-      if (u2 <= 0) continue;
-      var ext = ids[n].slice(-2) === '_e';
-      var rr = (ext ? 5.4 : 4.2) * u2;
-      var pulse = 1 + Math.sin(t * 1.6 + n) * 0.08;
+    var vis = [];
+    for (var i = 0; i < ids.length; i++) {
+      var nd = N[ids[i]];
+      if (ids[i] === 'succ_e' && des < 0.06) continue;
+      if (ids[i] === 'glc__D_e') continue;
+      var live = 0;
+      for (var k = 0; k < RX.length; k++) {
+        if ((RX[k][0] === ids[i] || RX[k][1] === ids[i]) && st[k].g > 0.25) { live = 1; break; }
+      }
+      if (!live) continue;
+      vis.push({ n: nd, p: pos(ids[i]) });
+    }
 
-      ctx.globalAlpha = alpha * u2 * 0.22;
-      ctx.fillStyle = ext ? C.accent : C.primary;
+    for (var i = 0; i < vis.length; i++) {             // halo, hubs only
+      var v = vis[i];
+      if (v.n.tier < 2) continue;
+      var R0 = 7 * sc, hr = R0 * 3.4;
+      var hg = ctx.createRadialGradient(v.p.x, v.p.y, 0, v.p.x, v.p.y, hr);
+      hg.addColorStop(0, RGBA('primary', al * 0.24));
+      hg.addColorStop(1, RGBA('primary', 0));
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y, rr * 2.6 * pulse, 0, Math.PI * 2);
+      ctx.arc(v.p.x, v.p.y, hr, 0, TAU);
+      ctx.fillStyle = hg;
       ctx.fill();
+    }
 
-      ctx.globalAlpha = alpha * u2;
-      ctx.fillStyle = ext ? C.accent : C.primary;
+    for (var tier = 0; tier <= 2; tier++) {            // discs, batched per tier
+      var rr = (tier === 2 ? 5.6 : tier === 1 ? 3.9 : 3.2) * sc;
       ctx.beginPath();
-      ctx.arc(pt.x, pt.y, rr, 0, Math.PI * 2);
+      var any = 0;
+      for (var i = 0; i < vis.length; i++) {
+        if (vis[i].n.tier !== tier) continue;
+        var v = vis[i];
+        ctx.moveTo(v.p.x + rr, v.p.y);
+        ctx.arc(v.p.x, v.p.y, rr, 0, TAU);
+        any = 1;
+      }
+      if (!any) continue;
+      ctx.fillStyle = C.dark ? 'rgba(11,18,32,0.92)' : 'rgba(255,255,255,0.92)';
       ctx.fill();
+      ctx.strokeStyle = tier === 0 ? RGBA('mute', al * 0.8) : RGBA('accent', al * 0.95);
+      ctx.lineWidth = 1.5 * sc;
+      ctx.stroke();
+    }
 
-      var lab = band(p, 0.42, 0.75);
-      if (lab > 0.02 && !small) {
-        // Ring labels go radially OUTWARD. Anchoring them all to the right
-        // pushes the left-hand ones into the cycle, on top of the reaction ids.
-        var lx = pt.x + rr + 6;
-        ctx.textAlign = 'left';
-        if (inRing[ids[n]]) {
-          var rc = netXY({ x: TCA_C.x, y: TCA_C.y });
-          if (pt.x < rc.x - 1) { lx = pt.x - rr - 6; ctx.textAlign = 'right'; }
+    ctx.beginPath();                                    // the cores
+    for (var i = 0; i < vis.length; i++) {
+      var v = vis[i], rr = (v.n.tier === 2 ? 2.6 : v.n.tier === 1 ? 1.8 : 1.4) * sc;
+      ctx.moveTo(v.p.x + rr, v.p.y);
+      ctx.arc(v.p.x, v.p.y, rr, 0, TAU);
+    }
+    ctx.fillStyle = RGBA('accent', al * 0.95);
+    ctx.fill();
+
+    ctx.beginPath();                                    // and the specular
+    for (var i = 0; i < vis.length; i++) {
+      var v = vis[i], rr = (v.n.tier === 2 ? 5.6 : v.n.tier === 1 ? 3.9 : 3.2) * sc;
+      var q = rr * 0.32;
+      ctx.moveTo(v.p.x - rr * 0.3 + q, v.p.y - rr * 0.3);
+      ctx.arc(v.p.x - rr * 0.3, v.p.y - rr * 0.3, q, 0, TAU);
+    }
+    ctx.fillStyle = RGBA('fg', al * 0.55);
+    ctx.fill();
+
+    // ── 8. type. Ring labels point radially out of the cycle, which is what stops
+    //       them colliding with it; everything else hangs off to the side.
+    if (lab) {
+      ctx.font = '600 9.5px "Roboto Mono", monospace';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = RGBA('fg', al * 0.80);
+      for (var i = 0; i < vis.length; i++) {
+        var v = vis[i], id = v.n.id;
+        if (!v.n.label) continue;
+        if (ANG[id] !== undefined) {
+          var a = ANG[id], ox = Math.cos(a), oy = Math.sin(a);
+          ctx.textAlign = ox < -0.3 ? 'right' : ox > 0.3 ? 'left' : 'center';
+          ctx.fillText(v.n.label, v.p.x + ox * 15 * sc, v.p.y + oy * 15 * sc);
+        } else if (!pin[id]) {
+          var rt = v.n.x > 0.55;
+          ctx.textAlign = rt ? 'left' : 'right';
+          ctx.fillText(v.n.label, v.p.x + (rt ? 11 : -11) * sc, v.p.y);
         }
-        ctx.globalAlpha = alpha * lab * 0.92;
-        ctx.fillStyle = C.fg;
-        ctx.font = '500 10px "Roboto Mono", monospace';
-        ctx.fillText(ids[n], lx, pt.y);
       }
     }
+    if (det) {                                          // enzyme names, on the arrow
+      ctx.font = '500 8.5px "Roboto Mono", monospace';
+      ctx.textAlign = 'center';
+      for (var i = 0; i < RX.length; i++) {
+        var R = RX[i], s = st[i], g = geo[i];
+        if (!R[2] || s.g < 0.92) continue;
+        if (s.f <= 0.04 && s.ko < 0.3) continue;
+        var m = g.at(0.5), tg = g.tan(0.5);
+        var sd = R[5] ? -R[5] : 1;                      // opposite the cofactor arc
+        var nx = -tg.y * sd, ny = tg.x * sd;
+        ctx.fillStyle = s.ko > 0.3 ? RGBA('bad', al * 0.9)
+                      : s.push > 0.05 ? RGBA('accent', al * 0.95)
+                      : RGBA('mute', al * 0.85);
+        ctx.fillText(R[2], m.x + nx * 11 * sc, m.y + ny * 11 * sc);
+      }
+    }
+
+    // ── 9. and the two cuts, marked where the reaction used to run
+    for (var i = 0; i < RX.length; i++) {
+      var s = st[i];
+      if (s.ko < 0.35) continue;
+      var m = geo[i].at(0.5), r = 5.5 * sc;
+      ctx.beginPath();
+      ctx.moveTo(m.x - r, m.y - r); ctx.lineTo(m.x + r, m.y + r);
+      ctx.moveTo(m.x + r, m.y - r); ctx.lineTo(m.x - r, m.y + r);
+      ctx.strokeStyle = RGBA('bad', al * s.ko);
+      ctx.lineWidth = 2.1 * sc;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+  }
+
+  /* ------------------------------------------------- act III: the map alone */
+  function drawNetwork(p, t, alpha) {
+    if (alpha <= 0.001) return;
+    ctx.save();
+    var bs = Math.min(W * (small ? 0.95 : 0.58), H * 0.90, 720);
+    paintMap({
+      map: netXY, alpha: alpha, t: t, size: bs,
+      grow: function (i) { return clamp((p - (i / RXN.length) * 0.30) / 0.22, 0, 1); }
+    });
     ctx.restore();
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
-     ACTS IV-VII. The model stops being a diagram and becomes an organism, and
-     then an industrial process. Same network throughout — the same BiGG ids, the
-     same TCA ring — because that is the point: one object, followed all the way
-     from a stream of bits to a vessel you can buy.
-     ═════════════════════════════════════════════════════════════════════════ */
+     THE CELL  ·  acts IV to VI
 
-  // deterministic, so a scrub back and forth lands on exactly the same frame
+     The first cut drew the organism as a stroked outline with a seven-percent fill,
+     which is a wireframe, not a cell. This one is a rendered object: a lit cytoplasm,
+     a supercoiled nucleoid, a cytoplasm full of ribosomes, and a gram-negative
+     envelope with two leaflets, phospholipid heads and a rim light. The transporters
+     are channel proteins sitting in the curved membrane on their own normals, not
+     rounded rectangles parked on a straight line.
+     ══════════════════════════════════════════════════════════════════════════ */
   function hsh(i) { var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
 
   function capsule(cx, cy, len, rad, ang) {
@@ -511,29 +821,195 @@
     ctx.closePath();
   }
 
-  /* ─────────────── act IV: the network closes into a cell, and swims ────────
-     The nodes do not vanish and get replaced by a drawing of a bacterium. They
-     CONDENSE into one: every metabolite is carried from where it sat on the map
-     to where it sits in the cytoplasm, a membrane closes around them, and the
-     thing swims off into a medium it can eat. */
+  /* Walk the envelope. u in [0,1) round the perimeter, and it hands back the outward
+     normal as well as the point — which is how the lipid heads sit on the surface and
+     how a transporter knows which way is out. */
+  function capPt(u, len, rad) {
+    var per = 2 * len + TAU * rad, d = (u % 1 + 1) % 1 * per, a;
+    if (d < len) return { x: -len / 2 + d, y: -rad, nx: 0, ny: -1 };
+    d -= len;
+    if (d < Math.PI * rad) {
+      a = -Math.PI / 2 + d / rad;
+      return { x: len / 2 + Math.cos(a) * rad, y: Math.sin(a) * rad,
+               nx: Math.cos(a), ny: Math.sin(a) };
+    }
+    d -= Math.PI * rad;
+    if (d < len) return { x: len / 2 - d, y: rad, nx: 0, ny: 1 };
+    d -= len;
+    a = Math.PI / 2 + d / rad;
+    return { x: -len / 2 + Math.cos(a) * rad, y: Math.sin(a) * rad,
+             nx: Math.cos(a), ny: Math.sin(a) };
+  }
+
+  // a similarity transform: uniform scale + rotation. Never a shear, so the cycle is
+  // still a circle no matter which act is looking at it or how far the morph has run.
+  function mapper(cx, cy, size, ang) {
+    var ca = Math.cos(ang || 0), sa = Math.sin(ang || 0);
+    var m = function (n) {
+      var lx = (n.x - 0.5) * size, ly = (n.y - 0.5) * size;
+      return { x: cx + lx * ca - ly * sa, y: cy + lx * sa + ly * ca };
+    };
+    m.ang = ang || 0;
+    return m;
+  }
+
+  function cellMapSize(len, rad) {   // the map is ~0.94 wide x ~0.66 tall of `size`
+    return Math.min(rad * 2.35, (len + 2 * rad) * 0.72, 660);
+  }
+
+  /* The organism itself. */
+  function capBody(cx, cy, len, rad, ang, al, o) {
+    var ca = Math.cos(ang), sa = Math.sin(ang);
+    var Wx = function (x, y) { return { x: cx + x * ca - y * sa, y: cy + x * sa + y * ca }; };
+    var total = len + 2 * rad;
+    var det = o.detail === undefined ? 1 : o.detail;
+    var k = o.k === undefined ? 1 : o.k;
+
+    // ---- it glows, faintly, into the medium
+    var og = ctx.createRadialGradient(cx, cy, rad * 0.85, cx, cy, total * 0.70);
+    og.addColorStop(0, RGBA('primary', 0.14 * al));
+    og.addColorStop(1, RGBA('primary', 0));
+    ctx.beginPath();
+    ctx.arc(cx, cy, total * 0.70, 0, TAU);
+    ctx.fillStyle = og;
+    ctx.fill();
+
+    // ---- cytoplasm, lit from up and to the left
+    capsule(cx, cy, len, rad, ang);
+    var lp = Wx(-len * 0.26, -rad * 0.45);
+    var cg = ctx.createRadialGradient(lp.x, lp.y, rad * 0.06, cx, cy, total * 0.56);
+    if (C.dark) {
+      cg.addColorStop(0, 'rgba(52,96,152,' + 0.60 * al + ')');
+      cg.addColorStop(0.5, 'rgba(26,52,90,' + 0.52 * al + ')');
+      cg.addColorStop(1, 'rgba(12,22,42,' + 0.46 * al + ')');
+    } else {
+      cg.addColorStop(0, 'rgba(232,242,254,' + 0.96 * al + ')');
+      cg.addColorStop(0.5, 'rgba(207,223,243,' + 0.88 * al + ')');
+      cg.addColorStop(1, 'rgba(184,203,228,' + 0.80 * al + ')');
+    }
+    ctx.fillStyle = cg;
+    ctx.fill();
+
+    if (det > 0.02 && rad > 10) {
+      ctx.save();
+      capsule(cx, cy, len, rad, ang);
+      ctx.clip();
+
+      // ---- the nucleoid. A bacterium keeps its chromosome loose in the cytoplasm,
+      //      supercoiled into a mass roughly here, and drawing it is most of why the
+      //      inside stops looking like an empty balloon with a diagram in it.
+      var nr = Math.min(rad * 0.58, total * 0.16);
+      ctx.beginPath();
+      for (var q = 0; q <= 72; q++) {
+        var a = (q / 72) * TAU;
+        var rr = nr * (1 + 0.30 * Math.sin(a * 5 + o.t * 0.16)
+                         + 0.15 * Math.sin(a * 9 - o.t * 0.10));
+        var pq = Wx(Math.cos(a) * rr * 1.7, Math.sin(a) * rr);
+        if (q === 0) ctx.moveTo(pq.x, pq.y); else ctx.lineTo(pq.x, pq.y);
+      }
+      ctx.closePath();
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = RGBA('primary', 0.05 * al * det);   // it is the backdrop the map
+      ctx.lineWidth = Math.max(3, rad * 0.10);              // sits on, NOT the subject:
+      ctx.stroke();                                         // at rad*0.22 and 0.11 alpha
+      ctx.strokeStyle = RGBA('primary', 0.08 * al * det);   // it was an 88px ribbon that
+      ctx.lineWidth = Math.max(0.9, rad * 0.022);           // swallowed the whole cell
+      ctx.stroke();
+
+      // ---- ribosomes. Texture is what makes it read as full of machinery.
+      var nrb = Math.round(clamp(total * 0.45, 30, 440));
+      ctx.beginPath();
+      for (var q = 0; q < nrb; q++) {
+        var px = (hsh(q * 1.7) - 0.5) * (len + rad * 1.5);
+        var edge = Math.min(1, Math.pow(Math.abs(px) / (total * 0.5), 6));
+        var py = (hsh(q * 4.3) * 2 - 1) * rad * 0.92 * Math.sqrt(1 - edge);
+        var rr = 0.5 + hsh(q * 9.1) * 1.5;
+        var pq = Wx(px, py);
+        ctx.moveTo(pq.x + rr, pq.y);
+        ctx.arc(pq.x, pq.y, rr, 0, TAU);
+      }
+      ctx.fillStyle = RGBA('fg', 0.17 * al * det);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // ---- the envelope: outer leaflet, periplasm, inner leaflet. The outer one is
+    //      rim lit, because one flat stroke of one flat colour is a wireframe.
+    var inset = clamp(rad * 0.11, 2.5, 8);
+    var g0 = Wx(-total * 0.42, -rad), g1 = Wx(total * 0.42, rad);
+    var rl = ctx.createLinearGradient(g0.x, g0.y, g1.x, g1.y);
+    rl.addColorStop(0, RGBA('fg', 0.95 * al));
+    rl.addColorStop(0.45, RGBA('fg', 0.58 * al));
+    rl.addColorStop(1, RGBA('fg', 0.28 * al));
+    capsule(cx, cy, len, rad, ang);
+    ctx.strokeStyle = rl;
+    ctx.lineWidth = Math.max(1.4, 2.6 * k);
+    ctx.stroke();
+
+    capsule(cx, cy, len, rad - inset, ang);
+    ctx.strokeStyle = RGBA('primary', 0.45 * al);
+    ctx.lineWidth = Math.max(0.9, 1.3 * k);
+    ctx.stroke();
+
+    // ---- phospholipid heads, on both leaflets
+    if (det > 0.15 && rad > 26) {
+      var per = 2 * len + TAU * rad;
+      var nh = Math.round(clamp(per / 10, 24, 200));
+      ctx.beginPath();
+      for (var q = 0; q < nh; q++) {
+        var pt = capPt(q / nh, len, rad);
+        var o1 = Wx(pt.x + pt.nx * 1.1, pt.y + pt.ny * 1.1);
+        var o2 = Wx(pt.x - pt.nx * (inset - 1.1), pt.y - pt.ny * (inset - 1.1));
+        ctx.moveTo(o1.x + 1.1, o1.y); ctx.arc(o1.x, o1.y, 1.1, 0, TAU);
+        ctx.moveTo(o2.x + 1.0, o2.y); ctx.arc(o2.x, o2.y, 1.0, 0, TAU);
+      }
+      ctx.fillStyle = RGBA('fg', 0.32 * al * det);
+      ctx.fill();
+    }
+  }
+
+  /* ---------------------------------------------------- the medium it lives in */
   var MED = [];
   (function () {
-    for (var i = 0; i < 54; i++) {
+    for (var i = 0; i < 96; i++) {
       MED.push({
         x: hsh(i * 1.7), y: hsh(i * 3.3),
-        r: 1.4 + hsh(i * 5.1) * 1.8,
-        eat: 0.34 + hsh(i * 7.9) * 0.60,        // when the cell gets to it
-        ph: hsh(i * 11.3) * 6.283,
-        kind: hsh(i * 13.7) < 0.55 ? 0 : 1      // sugar, or something else
+        r: 1.6 + hsh(i * 5.1) * 2.4,
+        eat: 0.34 + hsh(i * 7.9) * 0.58,
+        ph: hsh(i * 11.3) * TAU,
+        kind: hsh(i * 13.7) < 0.55 ? 0 : 1
       });
     }
   })();
 
-  /* The heading is deliberately kept away from +-pi. A rod that swims through the
-     wrap point of atan2 flips end for end in one frame, and worse, the heading has
-     to be interpolated to horizontal at the end of the act so that the cell lines
-     up with the membrane act V draws. Forcing dx > 0 keeps the angle inside
-     (-pi/2, pi/2), where lerping it to zero is safe and monotone. */
+  function paintMedium(al, t, keepOut) {
+    if (al <= 0.01) return;
+    for (var pass = 0; pass < 2; pass++) {
+      ctx.beginPath();
+      var any = 0;
+      for (var i = 0; i < MED.length; i++) {
+        var m = MED[i];
+        if (m.kind !== pass) continue;
+        var x = m.x * W + Math.sin(t * 0.5 + m.ph) * 9;
+        var y = m.y * H + Math.cos(t * 0.42 + m.ph) * 9;
+        if (keepOut && keepOut(x, y)) continue;
+        var r = m.r * (0.85 + 0.15 * Math.sin(t * 0.9 + m.ph));
+        ctx.moveTo(x + r, y);
+        ctx.arc(x, y, r, 0, TAU);
+        any = 1;
+      }
+      if (!any) continue;
+      ctx.fillStyle = RGBA(pass ? 'accent' : 'primary', al * 0.55);
+      ctx.fill();
+    }
+  }
+
+  /* ─────────────── act IV: the map closes into a cell, and the cell swims ──────
+     The heading is kept away from +-pi on purpose. A rod that swims through the wrap
+     point of atan2 flips end for end in one frame, and the heading also has to be
+     interpolated to zero at the end of the act so the cell lines up with the membrane
+     act V draws. Forcing dx > 0 keeps the angle inside (-pi/2, pi/2), where lerping it
+     to zero is safe and monotone. */
   function cellPose(t, spread, straight) {
     var home = small ? W * 0.5 : W * 0.66;
     var cx = home + Math.sin(t * 0.31) * W * 0.13 * spread;
@@ -543,421 +1019,287 @@
     return { cx: cx, cy: cy, ang: Math.atan2(dy, dx) * (1 - straight) };
   }
 
+  function insideGeom() {                       // act V's cell, to the pixel
+    var ccx = small ? W * 0.5 : W * 0.66;
+    var total = Math.min(W * (small ? 0.92 : 0.56), 950);
+    var rad = Math.min(total / 3.9, H * 0.31);   // a rod, near 2:1, not a blob
+    return { cx: ccx, cy: H * 0.5, rad: rad, len: total - rad * 2, total: total };
+  }
+
+  /* Where a channel stands, by the angle it faces. Straight-line perimeter fractions
+     are unusable on a capsule: the same u lands somewhere different the moment the
+     cell changes shape, and the caps are where all six of these actually sit. */
+  function gateU(deg, len, rad) {
+    var per = 2 * len + TAU * rad;
+    var a = ((deg % 360) + 360) % 360;
+    if (a < 90 || a > 270) {                                       // right cap
+      var r = (a > 270 ? a - 360 : a) + 90;
+      return (len + r * Math.PI / 180 * rad) / per;
+    }
+    return (2 * len + Math.PI * rad + (a - 90) * Math.PI / 180 * rad) / per;
+  }
+
   function drawCell(p, t, alpha) {
     if (alpha <= 0.002) return;
     ctx.save();
 
-    var form = easeInOut(clamp(p / 0.34, 0, 1));         // network -> cytoplasm
-    var out = easeInOut(clamp((p - 0.20) / 0.38, 0, 1)); // and it pulls back and swims
-    var zin = easeInOut(clamp((p - 0.76) / 0.24, 0, 1)); // ...and then we go back in
+    var form = easeInOut(clamp(p / 0.34, 0, 1));         // map -> cytoplasm
+    var out = easeInOut(clamp((p - 0.20) / 0.38, 0, 1)); // it pulls back and swims
+    var zin = easeInOut(clamp((p - 0.76) / 0.24, 0, 1)); // and then we go back in
     var pose = cellPose(t, out * (1 - zin), zin);
+    var V = insideGeom();
 
-    /* It shrinks away as it swims off, then swells straight at the lens as we dive in —
-       and it has to land on EXACTLY the membrane act V draws, or the cross-fade is a
-       jump cut between two cells of different sizes. So the dive interpolates to act V's
-       own geometry rather than to some round number. capsule() adds a cap of `rad` at
-       each end, so the straight run is the total minus the two caps. */
-    var vW = Math.min(small ? W * 0.42 : W * 0.285, 500) * 2;   // act V's membrane, exactly
-    var vH = Math.min(small ? H * 0.34 : H * 0.40, 420) * 2;
-    var swim = lerp(S * 0.62, S * 0.30, out);
-    var LEN = lerp(swim, vW - vH, zin);                          // straight section
-    var RAD = lerp(swim * 0.30, vH / 2, zin);
+    // it shrinks away as it swims off, then swells straight at the lens as we dive in
+    // and lands on EXACTLY the membrane act V draws, or the cross-fade is a jump cut
+    var swim = lerp(S * 0.60, S * 0.28, out);
+    var LEN = lerp(swim, V.len, zin);
+    var RAD = lerp(swim * 0.30, V.rad, zin);
 
-    // and the map inside it has to arrive at act V's layout too, not get squashed
-    var netW = lerp(LEN * 0.74, Math.min(vW * 0.58, 600), zin);
-    var netH = lerp(RAD * 1.30, Math.min(vH * 0.70, 545), zin);
-
-    // where a metabolite ends up once the membrane has closed round it
-    var inCell = function (n) {
-      var c = Math.cos(pose.ang), s = Math.sin(pose.ang);
-      var lx = (n.x - 0.5) * netW;
-      var ly = (n.y - 0.5) * netH;
-      return { x: pose.cx + lx * c - ly * s, y: pose.cy + lx * s + ly * c };
-    };
-    var at = function (n) {
-      var a = netXY(n), b = inCell(n);
-      return { x: lerp(a.x, b.x, form), y: lerp(a.y, b.y, form) };
-    };
-
-    // ---- the medium it is swimming in
-    var medA = alpha * band(p, 0.30, 0.52);
+    // the medium: it is eating
+    var medA = alpha * band(p, 0.26, 0.50) * (1 - zin);
     if (medA > 0.01) {
       for (var i = 0; i < MED.length; i++) {
         var m = MED[i];
-        var u = clamp((p - m.eat) / 0.10, 0, 1);        // being taken up
-        var fx = m.x * W + Math.sin(t * 0.5 + m.ph) * 7;
-        var fy = m.y * H + Math.cos(t * 0.42 + m.ph) * 7;
+        var u = clamp((p - m.eat) / 0.10, 0, 1);
+        var fx = m.x * W + Math.sin(t * 0.5 + m.ph) * 8;
+        var fy = m.y * H + Math.cos(t * 0.42 + m.ph) * 8;
         var x = lerp(fx, pose.cx, easeIn(u)), y = lerp(fy, pose.cy, easeIn(u));
+        var r = m.r * (1 - u * 0.8);
+        var gg = ctx.createRadialGradient(x, y, 0, x, y, r * 3.4);
+        gg.addColorStop(0, RGBA(m.kind ? 'accent' : 'primary', medA * 0.55 * (1 - u)));
+        gg.addColorStop(1, RGBA(m.kind ? 'accent' : 'primary', 0));
         ctx.beginPath();
-        ctx.arc(x, y, m.r * (1 - u * 0.75), 0, Math.PI * 2);
-        ctx.fillStyle = m.kind ? C.accent : C.primary;
-        ctx.globalAlpha = medA * (0.30 + 0.42 * Math.sin((m.ph + t * 0.6) % 6.283) * 0.3 + 0.25) * (1 - u);
+        ctx.arc(x, y, r * 3.4, 0, TAU);
+        ctx.fillStyle = gg;
         ctx.fill();
       }
     }
 
-    // ---- the membrane closing round it
-    var mem = alpha * easeOut(clamp((p - 0.10) / 0.28, 0, 1));
-    if (mem > 0.01) {
-      ctx.globalAlpha = mem * 0.10;
-      capsule(pose.cx, pose.cy, LEN, RAD, pose.ang);
-      ctx.fillStyle = C.primary;
-      ctx.fill();
+    capBody(pose.cx, pose.cy, LEN, RAD, pose.ang, alpha,
+            { t: t, detail: easeOut(clamp((p - 0.08) / 0.26, 0, 1)), k: lerp(0.8, 1, zin) });
 
-      ctx.globalAlpha = mem * 0.85;
-      ctx.lineWidth = 2.2;
-      ctx.strokeStyle = C.fg;
-      capsule(pose.cx, pose.cy, LEN, RAD, pose.ang);
-      ctx.stroke();
-
-      ctx.globalAlpha = mem * 0.30;                     // the inner leaflet
-      ctx.lineWidth = 1;
-      capsule(pose.cx, pose.cy, LEN - 7, RAD - 3.5, pose.ang);
-      ctx.stroke();
-
-      // a flagellum, because it is not drifting, it is swimming. It goes as we dive in:
-      // once the cell has swollen to fill the frame the tail would trail through the
-      // cytoplasm, which is both wrong and visible.
+    // a flagellum, because it is not drifting, it is swimming. It goes as we dive in:
+    // once the cell fills the frame the tail would trail through the cytoplasm.
+    var fl = alpha * easeOut(clamp((p - 0.12) / 0.24, 0, 1)) * (1 - zin);
+    if (fl > 0.01) {
       var c = Math.cos(pose.ang), s = Math.sin(pose.ang);
       ctx.beginPath();
-      ctx.globalAlpha = mem * 0.5 * (1 - zin);
-      ctx.lineWidth = 1.4;
-      ctx.strokeStyle = C.mute;
-      for (var f = 0; f <= 30; f++) {
-        var fu = f / 30;
-        var lx = -LEN / 2 - fu * LEN * 0.85;
-        var ly = Math.sin(fu * 10 - t * 7) * RAD * 0.42 * fu;
+      for (var f = 0; f <= 34; f++) {
+        var fu = f / 34;
+        var lx = -LEN / 2 - RAD - fu * (LEN + RAD * 2) * 0.75;
+        var ly = Math.sin(fu * 11 - t * 7) * RAD * 0.5 * fu;
         var px = pose.cx + lx * c - ly * s, py = pose.cy + lx * s + ly * c;
         if (f === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
+      ctx.strokeStyle = RGBA('mute', fl * 0.55);
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round';
       ctx.stroke();
     }
 
-    // ---- the network itself, carried into the cytoplasm
-    ctx.lineCap = 'round';
-    for (var e = 0; e < EDGES.length; e++) {
-      var E = EDGES[e], a = at(N[E[0]]), b = at(N[E[1]]);
-      var cp = ctrlM(E[0], E[1], a, b, at);
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.quadraticCurveTo(cp.x, cp.y, b.x, b.y);
-      ctx.strokeStyle = C.primary;
-      ctx.globalAlpha = alpha * (0.55 - 0.30 * form);
-      ctx.lineWidth = (1 + E[3] * 2.2) * (1 - 0.45 * form);
-      ctx.stroke();
-    }
-    for (var k in N) {
-      var q = at(N[k]);
-      ctx.beginPath();
-      ctx.arc(q.x, q.y, (2 + (inRing[k] ? 1.4 : 0)) * (1 - 0.35 * form), 0, Math.PI * 2);
-      ctx.fillStyle = inRing[k] ? C.accent : C.primary;
-      ctx.globalAlpha = alpha * (0.9 - 0.35 * form);
-      ctx.fill();
-    }
+    /* The map, riding in. The TRANSFORM is interpolated, not the points: lerping the
+       mapped coordinates of two different frames gives a general 2x2 matrix, which
+       shears, and a sheared circle is an ellipse — so the cycle's arcs would peel away
+       from its own nodes for the whole length of the morph. A similarity transform
+       cannot shear. */
+    var bs = Math.min(W * (small ? 0.95 : 0.58), H * 0.90, 720);
+    var netC = { x: small ? W * 0.5 : W * 0.66, y: H * 0.5 };
+    var ms = cellMapSize(LEN, RAD);
+    var mv = mapper(lerp(netC.x, pose.cx, form), lerp(netC.y, pose.cy, form),
+                    lerp(bs, ms, form), pose.ang * form);
+    paintMap({ map: mv, alpha: alpha * (1 - 0.15 * form), t: t,
+               size: lerp(bs, ms, form) });
     ctx.restore();
   }
 
-  /* ───────── acts V + VI: inside the cell — uptake, flux, secretion, design ──
-     One continuous view. Nutrients dock at transporters in the membrane and cross
-     it, the flux runs through the network, and what comes out the other side is
-     secreted. Then we engineer it: knock two reactions out, push three, and the
-     reductive branch of the TCA RUNS BACKWARDS — which is not a flourish, it is
-     how succinate is actually made. Acetate stops. Succinate starts. */
-  node('succ_e', 0.99, 0.60);
+  /* ───────── acts V + VI: inside — uptake, flux, secretion, and the design ──────
+     One continuous view. Nutrients dock at channels in the membrane and cross it, the
+     flux runs through the map, and what the cell cannot use it throws away. Then we
+     engineer it, and the reductive arm of the cycle runs backwards.
 
-  /* Every arrow here has to be one a metabolic modeller would sign. Glucose enters
-     on the PTS and lands as G6P. Ammonium is assimilated onto 2-oxoglutarate, which
-     is what GDH actually does with it. Oxygen is the one that cannot be drawn as a
-     mass-flow arrow into any metabolite on this map, because it is not one: it is
-     the terminal electron acceptor. So it gets the complex it really docks at - a
-     membrane-bound ETC, fed by a dashed electron line off the cycle - and it enters
-     on the right, where respiration lives, instead of being faked into a sugar. */
-  var UPT = [
-    { to: 'g6p_c', label: 'glucose', side: -1, y: 0.20 },
-    { to: 'akg_c', label: 'NH₄⁺', side: -1, y: 0.74 }
+     Every arrow is one a modeller would sign. Glucose enters on the PTS and lands as
+     G6P. Ammonium is assimilated onto 2-oxoglutarate, which is what GDH does with it.
+     Oxygen is the one that cannot be drawn as a mass-flow arrow into any metabolite on
+     this map, because it is not one: it is the terminal electron acceptor. So it gets
+     the complex it really docks at — a membrane-bound ETC, fed by a dashed electron
+     line off the cycle — instead of being faked into a sugar. */
+  var GATE = [
+    { id: 'glc', label: 'glucose',   deg: 190, to: 'g6p', dir: -1, col: 'primary' },
+    { id: 'co2', label: 'CO₂',       deg: -58, of: 'co2', dir: 1,  col: 'primary' },
+    { id: 'nh4', label: 'NH₄⁺',      deg: -30, to: 'akg', dir: -1, col: 'primary' },
+    { id: 'etc', label: 'O₂ · ETC',  deg: -2,  dir: -1,   col: 'primary', etc: 'succ' },
+    { id: 'suc', label: 'succinate', deg: 26,  of: 'succ_e', dir: 1, col: 'accent' },
+    { id: 'ace', label: 'acetate',   deg: 56,  of: 'ac',  dir: 1,  col: 'primary' }
   ];
-  var SEC = [
-    { m: 'co2_e', label: 'CO₂', y: 0.12, base: 1, des: 1 },
-    { m: 'ac_e', label: 'acetate', y: 0.82, base: 1, des: 0 },
-    { m: 'succ_e', label: 'succinate', y: 0.60, base: 0, des: 1 }
-  ];
-  var ETC = { y: 0.32, from: 'mal__L_c' };      // O₂ + the electrons that reduce it
-  var KO = { PYK: 1, ACKr: 1 };                 // knocked out
-  var PUSH = { MDH: 1, FUM: 1, SUCDi: 1 };      // and pushed, backwards
-  var DES_E = [['succ_c', 'succ_e', 'SUCCtex', 0.9]];
 
   function drawInside(p, t, alpha, des) {
     if (alpha <= 0.002) return;
     ctx.save();
-    ctx.lineCap = 'round';
 
-    /* The cell sits on the same centre line every other act uses (W*0.66 on desktop),
-       because that is the only part of the frame the caption card does not cover. An
-       earlier cut spanned the full width and put two of the three transporters
-       underneath the card, where nobody could see them. */
-    var ccx = small ? W * 0.5 : W * 0.66;
-    var halfW = Math.min(small ? W * 0.42 : W * 0.285, 500);
-    var halfH = Math.min(small ? H * 0.34 : H * 0.40, 420);
-    var mx = ccx - halfW, my = H * 0.5 - halfH;
-    var mw = halfW * 2, mh = halfH * 2;
-    var mr = mh / 2;      // a stadium, not a rounded box: act VII pulls back from the
-                          // same silhouette, so the two must be the same shape or the
-                          // cross-fade ghosts one outline over the other
+    var V = insideGeom();
+    var cx = V.cx, cy = V.cy, LEN = V.len, RAD = V.rad;
+    var pt = function (deg) {
+      var q = capPt(gateU(deg, LEN, RAD), LEN, RAD);
+      return { x: cx + q.x, y: cy + q.y, nx: q.nx, ny: q.ny };   // ang = 0 in here
+    };
 
-    // the medium it is still sitting in, on the other side of the wall
-    for (var mi = 0; mi < MED.length; mi++) {
-      var mm = MED[mi];
-      var ox = mm.x * W + Math.sin(t * 0.5 + mm.ph) * 9;
-      var oy = mm.y * H + Math.cos(t * 0.42 + mm.ph) * 9;
-      if (ox > mx - 26 && ox < mx + mw + 26 && oy > my - 26 && oy < my + mh + 26) continue;
-      ctx.beginPath();
-      ctx.arc(ox, oy, mm.r * 0.85, 0, Math.PI * 2);
-      ctx.fillStyle = mm.kind ? C.accent : C.primary;
-      ctx.globalAlpha = alpha * 0.30;
-      ctx.fill();
+    // the medium, on the other side of the wall
+    paintMedium(alpha * 0.9, t, function (x, y) {
+      return Math.abs(x - cx) < V.total * 0.5 + 30 && Math.abs(y - cy) < RAD + 30;
+    });
+
+    capBody(cx, cy, LEN, RAD, 0, alpha, { t: t, detail: 1, k: 1 });
+
+    // ---- terminals pinned just inside the pore each one leaves by. Left in the middle
+    //      of the cytoplasm the picture comes out inside-out: a short reaction and a
+    //      long diagonal transport line slashing across the whole map.
+    var pin = {};
+    for (var i = 0; i < GATE.length; i++) {
+      var G = GATE[i];
+      if (!G.of) continue;
+      var q = pt(G.deg);
+      pin[G.of] = { x: q.x - q.nx * 40, y: q.y - q.ny * 40 };
     }
 
-    // the membrane we are now standing inside
-    var mem = function (inset) {
-      var x = mx + inset, y = my + inset, w = mw - inset * 2, h = mh - inset * 2;
-      var r = Math.min(mr - inset, h / 2);
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.arcTo(x + w, y, x + w, y + r, r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-      ctx.lineTo(x + r, y + h);
-      ctx.arcTo(x, y + h, x, y + h - r, r);
-      ctx.lineTo(x, y + r);
-      ctx.arcTo(x, y, x + r, y, r);
-      ctx.closePath();
-    };
-    ctx.globalAlpha = alpha * 0.07; mem(0); ctx.fillStyle = C.primary; ctx.fill();
-    ctx.globalAlpha = alpha * 0.80; ctx.lineWidth = 2.4; ctx.strokeStyle = C.fg; mem(0); ctx.stroke();
-    ctx.globalAlpha = alpha * 0.30; ctx.lineWidth = 1.1; mem(7); ctx.stroke();   // the bilayer
+    var ms = cellMapSize(LEN, RAD);
+    var mv = mapper(cx, cy, ms, 0);
+    paintMap({ map: mv, alpha: alpha, t: t, size: ms, des: des, pin: pin });
 
-    /* Fit, do not stretch. The first version mapped the network into the membrane
-       box, which is close to 2:1, and glycolysis came out as a flat zigzag along the
-       floor while the cycle blew up into an empty hoop. This keeps the proportions
-       act III established, so the map you learned two acts ago is the same map. */
-    var nw = Math.min(mw * 0.58, 600), nh = Math.min(mh * 0.70, 545);
-    var IN = function (n) {
-      return { x: ccx + (n.x - 0.5) * nw, y: H * 0.5 + (n.y - 0.5) * nh };
-    };
-
-    /* The secreted metabolites are pinned to the inside of the membrane, next to the
-       pore each one leaves by. Left in the middle of the cytoplasm where the act III
-       layout puts them, the picture came out inside-out: a short reaction and a long
-       diagonal transport line slashing across the whole map. Acetate is made by ACKr
-       in the middle of the cell and then has to travel to the surface, so the long
-       line is the reaction and the short hop is the pore. */
-    var TERM = {};
-    for (var ti = 0; ti < SEC.length; ti++) {
-      TERM[SEC[ti].m] = { x: mx + mw - 62, y: my + mh * SEC[ti].y };
+    // ---- the electron transport chain: the cycle feeds it, oxygen docks at it
+    var eg = pt(-2), esrc = mv(N.succ);
+    ctx.setLineDash([2, 5]);
+    ctx.beginPath();
+    ctx.moveTo(esrc.x, esrc.y);
+    ctx.lineTo(eg.x - eg.nx * 12, eg.y - eg.ny * 12);
+    ctx.strokeStyle = RGBA('mute', alpha * 0.5);
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    for (var e = 0; e < 3; e++) {
+      var ev = (t * 0.55 + e / 3) % 1;
+      var ex = lerp(esrc.x, eg.x - eg.nx * 12, ev), ey = lerp(esrc.y, eg.y - eg.ny * 12, ev);
+      ctx.moveTo(ex + 1.8, ey);
+      ctx.arc(ex, ey, 1.8, 0, TAU);
     }
-    var pos = function (id) { return TERM[id] || IN(N[id]); };
+    ctx.fillStyle = RGBA('mute', alpha * 0.8);
+    ctx.fill();
 
-    // ---- reaction state under engineering
-    var edges = EDGES.concat(DES_E);
-    var st = function (rxn, base) {
-      var ko = KO[rxn] ? des : 0;
-      var push = PUSH[rxn] ? des : 0;
-      var born = rxn === 'SUCCtex' ? des : 1;
-      return { f: base * (1 - ko) * (1 + 1.35 * push) * born, ko: ko, push: push, rev: PUSH[rxn] ? des : 0 };
-    };
-
-    // ---- edges. glc__D_e is extracellular; in here glucose arrives through the gate.
-    for (var e = 0; e < edges.length; e++) {
-      var E = edges[e];
-      if (E[0] === 'glc__D_e' || E[1] === 'glc__D_e') continue;
-      var a = pos(E[0]), b = pos(E[1]), cp = ctrlM(E[0], E[1], a, b, IN);
-      var s = st(E[2], E[3]);
-      if (s.f <= 0.001 && !s.ko) continue;
-
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.quadraticCurveTo(cp.x, cp.y, b.x, b.y);
-      if (s.ko > 0.05) {
-        ctx.setLineDash([4, 5]);
-        ctx.strokeStyle = C.bad;
-        ctx.globalAlpha = alpha * 0.55 * s.ko;
-        ctx.lineWidth = 1.4;
-      } else {
-        ctx.setLineDash([]);
-        ctx.strokeStyle = s.push > 0.05 ? C.accent : C.primary;
-        ctx.globalAlpha = alpha * (0.30 + 0.40 * s.f);
-        ctx.lineWidth = 1 + s.f * 2.6;
-      }
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      if (s.ko > 0.35) {                       // an X where the reaction used to be
-        var mid = qbez(a, cp, b, 0.5), r = 5;
+    // ---- the channels, standing in the membrane on their own normals
+    var channel = function (g, on, col) {
+      ctx.save();
+      ctx.translate(g.x, g.y);
+      ctx.rotate(Math.atan2(g.ny, g.nx));          // +x now points out of the cell
+      var th = 10, lh = 9.5, gap = 5;
+      var lg = ctx.createLinearGradient(-th, 0, th, 0);
+      lg.addColorStop(0, RGBA(col, (0.12 + 0.20 * on) * alpha));
+      lg.addColorStop(0.5, RGBA(col, (0.36 + 0.42 * on) * alpha));
+      lg.addColorStop(1, RGBA(col, (0.12 + 0.20 * on) * alpha));
+      for (var s = -1; s <= 1; s += 2) {
+        var yc = s * (gap + lh / 2);
         ctx.beginPath();
-        ctx.moveTo(mid.x - r, mid.y - r); ctx.lineTo(mid.x + r, mid.y + r);
-        ctx.moveTo(mid.x + r, mid.y - r); ctx.lineTo(mid.x - r, mid.y + r);
-        ctx.strokeStyle = C.bad;
-        ctx.globalAlpha = alpha * s.ko;
-        ctx.lineWidth = 1.8;
+        if (ctx.roundRect) ctx.roundRect(-th, yc - lh / 2, th * 2, lh, 3.2);
+        else ctx.rect(-th, yc - lh / 2, th * 2, lh);
+        ctx.fillStyle = lg;
+        ctx.fill();
+        ctx.strokeStyle = RGBA(col, (0.55 + 0.35 * on) * alpha);
+        ctx.lineWidth = 1.1;
         ctx.stroke();
       }
-
-      // flux. The reductive branch runs the other way once we engineer it.
-      if (s.f > 0.02) {
-        var np = 1 + Math.round(s.f * 2.2);
-        for (var q = 0; q < np; q++) {
-          var uu = (t * (0.16 + 0.10 * s.f) + e * 0.31 + q / np) % 1;
-          if (s.rev > 0.5) uu = 1 - uu;
-          var pt = qbez(a, cp, b, uu);
-          ctx.beginPath();
-          ctx.arc(pt.x, pt.y, 1.5 + 1.3 * s.f, 0, Math.PI * 2);
-          ctx.fillStyle = s.push > 0.05 ? C.accent : C.primary;
-          ctx.globalAlpha = alpha * (0.55 + 0.4 * s.f);
-          ctx.fill();
-        }
-      }
-    }
-
-    // ---- metabolites
-    for (var k in N) {
-      if (k === 'succ_e' && des < 0.05) continue;
-      if (k === 'glc__D_e') continue;
-      var q2 = pos(k);
-      ctx.beginPath();
-      ctx.arc(q2.x, q2.y, inRing[k] ? 3.6 : 2.6, 0, Math.PI * 2);
-      ctx.fillStyle = inRing[k] ? C.accent : C.primary;
-      ctx.globalAlpha = alpha * 0.92;
-      ctx.fill();
-    }
-
-    // ---- transporters, and what goes through them
-    var gate = function (x, y, on, col, tall) {
-      var hh = tall ? 17 : 10;
-      ctx.beginPath();
-      ctx.roundRect ? ctx.roundRect(x - 5.5, y - hh, 11, hh * 2, 3)
-                    : ctx.rect(x - 5.5, y - hh, 11, hh * 2);
-      ctx.fillStyle = col;
-      ctx.globalAlpha = alpha * (0.24 + 0.5 * on);
-      ctx.fill();
-      ctx.strokeStyle = col;
-      ctx.globalAlpha = alpha * (0.55 + 0.4 * on);
-      ctx.lineWidth = 1.3;
-      ctx.stroke();
-    };
-    // a metabolite crossing: outside -> pore -> its node, or the reverse
-    var ferry = function (gx, gy, nx, ny, dir, n, ph, col, aa) {
-      var away = gx + dir * W * 0.075;
-      for (var q = 0; q < n; q++) {
-        var v = (t * 0.30 + ph + q / n) % 1;
-        var x, y;
-        if (dir < 0) {                                   // inbound: medium, pore, network
-          if (v < 0.42) { x = lerp(away, gx, v / 0.42); y = gy + Math.sin(v * 9 + ph) * 5; }
-          else { var w1 = (v - 0.42) / 0.58; x = lerp(gx, nx, w1); y = lerp(gy, ny, w1); }
-        } else {                                         // outbound: network, pore, medium
-          if (v < 0.58) { var w2 = v / 0.58; x = lerp(nx, gx, w2); y = lerp(ny, gy, w2); }
-          else { var w3 = (v - 0.58) / 0.42; x = lerp(gx, away, w3); y = gy + Math.sin(w3 * 9 + ph) * 5; }
-        }
+      if (on > 0.04) {                              // the pore, lit
+        var pg = ctx.createRadialGradient(0, 0, 0, 0, 0, 12);
+        pg.addColorStop(0, RGBA(col, 0.55 * on * alpha));
+        pg.addColorStop(1, RGBA(col, 0));
         ctx.beginPath();
-        ctx.arc(x, y, 2.6, 0, Math.PI * 2);
-        ctx.fillStyle = col;
-        ctx.globalAlpha = aa;
+        ctx.arc(0, 0, 12, 0, TAU);
+        ctx.fillStyle = pg;
         ctx.fill();
       }
+      ctx.restore();
     };
 
     ctx.font = '600 10px "Roboto Mono", monospace';
     ctx.textBaseline = 'middle';
 
-    for (var u = 0; u < UPT.length; u++) {
-      var T = UPT[u];
-      var gy = my + mh * T.y, tgt = pos(T.to);
-      ctx.beginPath();                            // gate -> the reaction it feeds
-      ctx.moveTo(mx + 6, gy);
-      ctx.lineTo(tgt.x, tgt.y);
-      ctx.strokeStyle = C.primary;
-      ctx.globalAlpha = alpha * 0.42;
-      ctx.lineWidth = 1.3;
-      ctx.stroke();
-      ferry(mx, gy, tgt.x, tgt.y, -1, 3, u * 0.27, C.primary, alpha * 0.9);
-      gate(mx, gy, 1, C.primary);
-      if (!small) {                              // no room beside the cell on a phone,
-        ctx.textAlign = 'right';                 // and the card underneath names them
-        ctx.fillStyle = C.mute;
-        ctx.globalAlpha = alpha * 0.8;
-        ctx.fillText(T.label, mx - 13, gy);
+    for (var i = 0; i < GATE.length; i++) {
+      var G = GATE[i], g = pt(G.deg);
+      var on = G.id === 'suc' ? des
+             : G.id === 'ace' ? lerp(1, 0, des)
+             : 1;
+      if (on < 0.03) continue;
+      var col = G.col;
+      var node = G.to ? mv(N[G.to]) : G.of ? pin[G.of] : null;
+
+      if (node) {                                   // the leg from the pore to the map
+        var m0 = { x: g.x - g.nx * 9, y: g.y - g.ny * 9 };
+        var bx = (m0.x + node.x) / 2, by = (m0.y + node.y) / 2;
+        var vx = bx - cx, vy = (by - cy) * 2.2, vl = Math.hypot(vx, vy) || 1;
+        var leg = { x: bx + vx / vl * 26, y: by + vy / vl * 26 };   // bows toward the wall
+        ctx.beginPath();
+        ctx.moveTo(m0.x, m0.y);
+        ctx.quadraticCurveTo(leg.x, leg.y, node.x, node.y);
+        ctx.strokeStyle = RGBA(col, alpha * 0.42 * on);
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+
+        var away = { x: g.x + g.nx * 62, y: g.y + g.ny * 62 };
+        var np = G.dir < 0 ? 3 : 1 + Math.round(on * 2);
+        ctx.beginPath();
+        for (var q = 0; q < np; q++) {
+          var v = (t * 0.30 + i * 0.29 + q / np) % 1;
+          var px, py;
+          if (G.dir < 0) {                          // in: medium, pore, map
+            if (v < 0.42) { px = lerp(away.x, g.x, v / 0.42); py = lerp(away.y, g.y, v / 0.42); }
+            else { var q1 = qbez(m0, leg, node, (v - 0.42) / 0.58); px = q1.x; py = q1.y; }
+          } else {                                  // out: map, pore, medium
+            if (v < 0.58) { var q2 = qbez(node, leg, m0, v / 0.58); px = q2.x; py = q2.y; }
+            else { var w3 = (v - 0.58) / 0.42; px = lerp(g.x, away.x, w3); py = lerp(g.y, away.y, w3); }
+          }
+          ctx.moveTo(px + 2.7, py);
+          ctx.arc(px, py, 2.7, 0, TAU);
+        }
+        ctx.fillStyle = RGBA(col, alpha * 0.92 * on);
+        ctx.fill();
+      } else if (G.etc) {                           // oxygen arriving at the complex
+        var away2 = { x: g.x + g.nx * 62, y: g.y + g.ny * 62 };
+        ctx.beginPath();
+        for (var q = 0; q < 2; q++) {
+          var v2 = (t * 0.34 + q / 2) % 1;
+          var ox = lerp(away2.x, g.x, v2), oy = lerp(away2.y, g.y, v2);
+          ctx.moveTo(ox + 2.7, oy);
+          ctx.arc(ox, oy, 2.7, 0, TAU);
+        }
+        ctx.fillStyle = RGBA(col, alpha * 0.9);
+        ctx.fill();
+      }
+
+      channel(g, on, col);
+
+      if (!small) {                                 // no room beside a 390px cell, and
+        var lx = g.x + g.nx * 26, ly = g.y + g.ny * 26;   // the card underneath names them
+        ctx.textAlign = g.nx < -0.25 ? 'right' : g.nx > 0.25 ? 'left' : 'center';
+        ctx.fillStyle = col === 'accent' ? RGBA('accent', alpha * on)
+                                         : RGBA('mute', alpha * (0.45 + 0.45 * on));
+        ctx.fillText(G.label, lx, ly);
       }
     }
 
-    // the electron transport chain: oxygen docks here, and the cycle feeds it
-    var ey = my + mh * ETC.y, esrc = pos(ETC.from), egx = mx + mw;
-    ctx.setLineDash([2, 4]);
-    ctx.beginPath();
-    ctx.moveTo(esrc.x, esrc.y);
-    ctx.lineTo(egx - 7, ey);
-    ctx.strokeStyle = C.mute;
-    ctx.globalAlpha = alpha * 0.5;
-    ctx.lineWidth = 1.1;
-    ctx.stroke();
-    ctx.setLineDash([]);
-    for (var ee = 0; ee < 3; ee++) {              // electrons down the chain
-      var ev = (t * 0.55 + ee / 3) % 1;
-      ctx.beginPath();
-      ctx.arc(lerp(esrc.x, egx - 7, ev), lerp(esrc.y, ey, ev), 1.7, 0, Math.PI * 2);
-      ctx.fillStyle = C.mute;
-      ctx.globalAlpha = alpha * 0.75;
-      ctx.fill();
-    }
-    ferry(egx, ey, egx - 7, ey, -1, 2, 0.5, C.primary, alpha * 0.9);
-    gate(egx, ey, 1, C.primary, 1);
-    if (!small) {
-      ctx.textAlign = 'left';
-      ctx.fillStyle = C.mute;
-      ctx.globalAlpha = alpha * 0.8;
-      ctx.fillText('O₂ · ETC', egx + 13, ey);
-    }
-
-    for (var sI = 0; sI < SEC.length; sI++) {
-      var Sx = SEC[sI];
-      var lvl = lerp(Sx.base, Sx.des, des);       // acetate dies, succinate is born
-      if (lvl < 0.03) continue;
-      var sy = my + mh * Sx.y, src = pos(Sx.m);
-      var isNew = Sx.m === 'succ_e';
-      var col = isNew ? C.accent : C.primary;
-      ctx.beginPath();
-      ctx.moveTo(src.x, src.y);
-      ctx.lineTo(mx + mw - 6, sy);
-      ctx.strokeStyle = col;
-      ctx.globalAlpha = alpha * 0.42 * lvl;
-      ctx.lineWidth = 1.3;
-      ctx.stroke();
-      ferry(mx + mw, sy, src.x, src.y, 1, 1 + Math.round(lvl * 2), sI * 0.4, col, alpha * 0.92 * lvl);
-      gate(mx + mw, sy, lvl, col);
-      if (!small) {
-        ctx.textAlign = 'left';
-        ctx.fillStyle = isNew ? C.accent : C.mute;
-        ctx.globalAlpha = alpha * (0.4 + 0.5 * lvl);
-        ctx.fillText(Sx.label, mx + mw + 13, sy);
-      }
-    }
-
-    // ---- what we just did to it (the card's stat line carries this on a phone)
+    // ---- what we just did to it
     if (des > 0.12 && !small) {
       ctx.textAlign = 'left';
       ctx.font = '600 11px "Roboto Mono", monospace';
       var lines = [
-        ['✕ PYK, ACKr', C.bad],
-        ['↑ MDH, FUM, SUCDi', C.accent],
-        ['flux reversed → succinate', C.accent]
+        ['✕ PYK · ✕ ACK', 'bad'],
+        ['↑ PPC', 'accent'],
+        ['⇄ MDH · FUM · SDH', 'accent'],
+        ['→ succinate', 'accent']
       ];
-      // in the clear cytoplasm between the wall and the glycolytic chain — the corner
-      // of the membrane box is rounded away, so the top-left is medium, not cell
+      var lx0 = cx - V.total * 0.5 + 34, ly0 = cy - RAD * 0.62;
       for (var li = 0; li < lines.length; li++) {
-        var la = alpha * band(des, 0.12 + li * 0.20, 0.30 + li * 0.20);
+        var la = alpha * band(des, 0.10 + li * 0.16, 0.26 + li * 0.16);
         if (la <= 0.01) continue;
-        ctx.fillStyle = lines[li][1];
-        ctx.globalAlpha = la * 0.9;
-        ctx.fillText(lines[li][0], mx + 46, my + mh * 0.36 + li * 16);
+        ctx.fillStyle = RGBA(lines[li][1], la * 0.95);
+        ctx.fillText(lines[li][0], lx0, ly0 + li * 17);
       }
     }
     ctx.restore();
@@ -989,9 +1331,8 @@
        inside the cell to outside it lands on the same object at the same size, and
        reaches the vessel at 72% - leaving the last quarter of the act to hold on it
        rather than arriving on the final pixel of the scroll. */
-    var halfW0 = Math.min(small ? W * 0.42 : W * 0.285, 500);   // act VI's membrane
-    var halfH0 = Math.min(small ? H * 0.34 : H * 0.40, 420);
-    var FOV0 = W * CELL_UM / (halfW0 * 2);
+    var V6 = insideGeom();                                     // act VI's cell, exactly
+    var FOV0 = W * CELL_UM / V6.total;
     var u = easeInOut(clamp(p / 0.72, 0, 1));
     var fov = Math.pow(10, lerp(Math.log(FOV0) / Math.LN10, Math.log(FOV1) / Math.LN10, u));
     var ppu = W / fov;                            // px per micrometre
@@ -1004,7 +1345,7 @@
        scale bar printed underneath saying otherwise — which is precisely the promise
        this act exists to keep. The straight run is backed out of the total instead. */
     var KROD = 0.125;                             // E. coli: 2 um long, 0.5 um across
-    var K6 = halfH0 / (halfW0 * 2);               // ...and act VI's cutaway, wider
+    var K6 = V6.rad / V6.total;                   // ...and act VI's cutaway, wider
     var rod = function (px, py, total, k, ang) {
       capsule(px, py, total * (1 - 2 * k), total * k, ang);
     };
@@ -1052,35 +1393,9 @@
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
-      if (near > 0.02) {                          // its network, until it is unresolvable
-        var hnw = cellPx * 0.58, hnh = cellPx * hk * 2 * 0.68;
-        var HM = function (nn) {
-          return { x: cx + (nn.x - 0.5) * hnw, y: cy + (nn.y - 0.5) * hnh };
-        };
-        ctx.lineCap = 'round';
-        for (var he = 0; he < EDGES.length; he++) {
-          var HE = EDGES[he];
-          if (HE[0] === 'glc__D_e' || HE[1] === 'glc__D_e') continue;
-          var ha = HM(N[HE[0]]), hb = HM(N[HE[1]]);
-          var hc = ctrlM(HE[0], HE[1], ha, hb, HM);
-          ctx.beginPath();
-          ctx.moveTo(ha.x, ha.y);
-          ctx.quadraticCurveTo(hc.x, hc.y, hb.x, hb.y);
-          ctx.strokeStyle = C.primary;
-          ctx.globalAlpha = alpha * near * 0.45;
-          ctx.lineWidth = 1 + HE[3] * 1.6;
-          ctx.stroke();
-        }
-        ctx.beginPath();
-        for (var hk2 in N) {
-          if (hk2 === 'glc__D_e' || hk2 === 'succ_e') continue;
-          var hq = HM(N[hk2]);
-          ctx.moveTo(hq.x + 2.2, hq.y);
-          ctx.arc(hq.x, hq.y, 2.2, 0, Math.PI * 2);
-        }
-        ctx.fillStyle = C.accent;
-        ctx.globalAlpha = alpha * near * 0.55;
-        ctx.fill();
+      if (near > 0.02) {                          // its map, until it is unresolvable
+        var hms = cellMapSize(cellPx * (1 - 2 * hk), cellPx * hk);
+        paintMap({ map: mapper(cx, cy, hms, 0), alpha: alpha * near, t: t, size: hms });
       }
     }
 
@@ -1307,8 +1622,8 @@
     },
     {
       k: 'Act VI · Strain design',
-      b: 'Now change it. Knock out pyruvate kinase and acetate kinase, push the reductive branch, and the flux through the bottom of the TCA cycle RUNS BACKWARDS. Acetate stops. Succinate starts. This is what the model is for: it tells you which edits to make before you make them.',
-      a: '✕ PYK, ACKr · ↑ MDH, FUM', bl: 'succinate'
+      b: 'Now change it. Knock out pyruvate kinase, so the PEP cannot drain away to pyruvate, and acetate kinase, so the carbon cannot leak out as overflow. Switch on PEP carboxylase. The reductive arm of the cycle now RUNS BACKWARDS, and the succinate pours out. This is what the model is for: it tells you which edits to make before you make them.',
+      a: '✕ PYK · ✕ ACK · ↑ PPC', bl: 'succinate'
     },
     {
       k: 'Act VII · Scale',
