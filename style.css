@@ -39,6 +39,7 @@
   --primary:   #5B9BFF;
   --primary-2: #2563EB;
   --accent:    #F5A524;
+  --bad:       #F87171;
   --ring:      #7FB4FF;
   --shadow:    0 18px 50px -18px rgba(0, 0, 0, 0.75);
   --glow:      0 0 0 1px rgba(91, 155, 255, 0.30), 0 14px 44px -16px rgba(91, 155, 255, 0.35);
@@ -62,6 +63,7 @@
   --primary:   #1E3A5F;
   --primary-2: #2563EB;
   --accent:    #A16207;
+  --bad:       #B91C1C;
   --ring:      #1E3A5F;
   --shadow:    0 14px 40px -18px rgba(15, 23, 42, 0.22);
   --glow:      0 0 0 1px rgba(30, 58, 95, 0.22), 0 14px 40px -18px rgba(30, 58, 95, 0.25);
@@ -272,7 +274,7 @@ main, .nav, .footer { position: relative; z-index: 1; }
 /* ---------- scrollytelling: binary -> DNA -> pangenome -> metabolism ---------- */
 .scrolly {
   position: relative;
-  height: 360vh;                 /* the scroll runway that scrubs the three acts */
+  height: 840vh;                 /* the runway that scrubs all seven acts */
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
@@ -349,14 +351,29 @@ main, .nav, .footer { position: relative; z-index: 1; }
   opacity: 1; color: var(--fg); border-bottom-color: var(--accent);
 }
 
+/* On a phone the copy card is 92vw, so an absolutely-positioned full-pane canvas draws
+   entirely underneath it. That was survivable with three acts — a sliver of the network
+   peeked past the edges — but with seven it means the whole sequence is invisible on the
+   device most people will open this on. So the pane splits: scene on top, copy beneath,
+   and the canvas gets a region of its own instead of the card's shadow. */
 @media (max-width: 860px) {
-  .scrolly { height: 320vh; }
+  .scrolly { height: 620vh; }          /* seven acts need a runway, 320vh was for three */
+  .scrolly-sticky {
+    display: flex; flex-direction: column;
+    justify-content: flex-start; align-items: center;
+    padding-top: var(--sp-5);
+  }
+  #scene {
+    position: relative; inset: auto;
+    width: 100%; height: 42svh; flex: none;
+  }
   .scrolly-copy {
-    justify-self: center; margin-left: 0;
+    justify-self: center; margin: var(--sp-4) 0 0;
     width: min(46ch, 92vw); padding: var(--sp-5);
   }
   .act-body { min-height: 7em; font-size: 0.94rem; }
   .scrolly-rail { display: none; }
+  .scrolly-steps { display: none; }    /* seven chips will not fit; the card names the act */
 }
 
 /* No motion: no pinned scrub, no runway. Show the finished network and its story. */
