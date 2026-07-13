@@ -72,6 +72,7 @@
 
   /* --------------------------------------------------------------- sizing */
   var W = 0, H = 0, RW = 0, live = false, zTop = 0, zLen = 1;
+  var TOTAL = 0;                            // how far down the virtual strip has been built
   var BOUNDS = [];                          // document y of each section boundary
 
   function measure() {
@@ -98,8 +99,13 @@
     for (var i = 1; i < secs.length; i++) {
       BOUNDS.push(secs[i].getBoundingClientRect().top + window.scrollY);
     }
-    buildMotes();
-    buildNet();
+
+    /* The page GROWS after load: the figures are lazy, so scrollHeight at load time is
+       short and the strip built from it runs out before the real bottom. Only ever grow
+       it, and never rebuild what is already there — the generators are seeded, so a
+       longer run emits the identical prefix and simply appends. No pop. */
+    var want = zLen + H * 1.4;
+    if (want > TOTAL + 40) { TOTAL = want; buildMotes(); buildNet(); }
   }
 
   /* ═════════════════════ LEFT: the DNA is built as you scroll ══════════════ */
@@ -115,7 +121,7 @@
   function buildMotes() {
     var R = rng(4242);
     MOTES = [];
-    var total = zLen + H;
+    var total = TOTAL;
     // A FIELD of raw information anchored to the page. The front sweeps over it.
     for (var vy = -200; vy < total; vy += 16) {
       MOTES.push({
@@ -327,7 +333,7 @@
   function buildNet() {
     NODES = []; EDGES = [];
     var R = rng(20260713);
-    var total = zLen + H;
+    var total = TOTAL;
     var SP = 40;
     var li = 0;
 
@@ -703,22 +709,25 @@
   }
 
   /* ------------------------------------------------------------------ loop */
-  var raf = 0, t0 = performance.now(), vis = true, cleared = false;
+  var raf = 0, t0 = performance.now(), hidden = false;
 
   function frame(now) {
     raf = 0;
-    if (!live || !vis) return;
+    if (!live || hidden) return;
     var y = window.scrollY || window.pageYOffset;
     var s = y - zTop + H;
     var alpha = clamp((y - (zTop - H * 0.9)) / (H * 0.55), 0, 1);
 
     g.clearRect(0, 0, W, H);
-    if (alpha <= 0.004) {
-      cleared = true;
-      if (!reduced) raf = requestAnimationFrame(frame);
-      return;
-    }
-    cleared = false;
+
+    /* ABOVE the zone: clear and stop, and let the scroll listener wake us. There is no
+       "below the zone" — the strip runs to the bottom of the document — so once we are
+       in, we keep drawing all the way down.
+
+       This used to be gated on an IntersectionObserver watching #work, which is only the
+       FIRST section: the moment the reader scrolled past it the loop was cancelled and
+       everything from Papers down showed a frozen last frame. */
+    if (alpha <= 0.004) return;
     var t = (now - t0) / 1000;
 
     // which boundary is closest to the middle of the screen, and how close?
@@ -738,24 +747,21 @@
 
     if (!reduced) raf = requestAnimationFrame(frame);
   }
-  function kick() { if (!raf && live && vis) raf = requestAnimationFrame(frame); }
-
-  new IntersectionObserver(function (es) {
-    vis = es[0].isIntersecting;
-    if (vis) kick(); else if (raf) { cancelAnimationFrame(raf); raf = 0; }
-  }, { rootMargin: '200px' }).observe(work);
+  function kick() { if (!raf && live && !hidden) raf = requestAnimationFrame(frame); }
 
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) { if (raf) { cancelAnimationFrame(raf); raf = 0; } } else kick();
+    hidden = document.hidden;
+    if (hidden) { if (raf) { cancelAnimationFrame(raf); raf = 0; } } else kick();
   });
 
   var rt;
-  window.addEventListener('resize', function () {
-    clearTimeout(rt);
-    rt = setTimeout(function () { measure(); kick(); }, 140);
-  }, { passive: true });
+  function remeasure() { clearTimeout(rt); rt = setTimeout(function () { measure(); kick(); }, 160); }
+  window.addEventListener('resize', remeasure, { passive: true });
   window.addEventListener('scroll', kick, { passive: true });
   window.addEventListener('load', function () { measure(); kick(); });
+
+  // the lazy figures land as the reader arrives at them, and the document gets taller
+  if (window.ResizeObserver) new ResizeObserver(remeasure).observe(document.body);
 
   measure();
   kick();
