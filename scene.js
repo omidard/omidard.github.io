@@ -1626,7 +1626,7 @@
     },
     {
       k: 'Act V · Uptake and secretion',
-      b: 'A model is only as good as the medium you put it in. Media is a library of 12,340 growth media, every component mapped to a BiGG exchange and every medium carrying its citation. GrowthDB adds 9,706 measured uptake and secretion rates, so a real number lands on a real exchange.',
+      b: 'Now feed it. The media it eats are digital copies of real ones: Media holds 12,340 of them, the laboratory broths and the food matrices these organisms are actually cultured in, every component mapped to a BiGG exchange and every entry carrying its citation. GrowthDB adds 9,706 measured uptake and secretion rates to bound them.',
       a: 'glucose, O₂, NH₄⁺', bl: 'acetate, CO₂',
       l: [['Media', 'https://omidard.github.io/Media/'],
           ['GrowthDB', 'https://omidard.github.io/GrowthDB/']]
