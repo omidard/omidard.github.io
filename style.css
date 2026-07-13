@@ -656,39 +656,37 @@ body.lb-open { overflow: hidden; }
 }
 
 /* ═══════════════════════ margin rails ═══════════════════════════════════════
-   The pipeline scrollytelling stopped at "01 — Work". From there down the page
-   has two empty margins, so they carry it on: bits assembling into a double
-   helix on the left, a metabolic network growing branch by branch on the right.
+   The pipeline scrollytelling stopped at "01 — Work". From there down, the page has
+   two empty margins and 256px of clear space between every section, and all of it
+   carries it on: bits building a double helix on the left, a metabolic network
+   turning on the right, and at each section boundary the two converge on the middle,
+   fuse, and separate again.
 
-   They exist ONLY where there is genuinely an empty margin to put them in. The
-   content column is --wrap wide, so each margin is (100vw - --wrap) / 2; below
-   about 1400px that is too thin to hold anything, and the rails simply are not
-   rendered rather than being squeezed against the text.
+   ONE canvas, spanning the viewport, because the material has to be able to travel
+   from the margins to the centre. It only draws in the margins and in the empty band
+   between sections; the reading column is never touched.
 
-   They sit ABOVE the section backgrounds on purpose: .section.alt paints an
-   opaque white full-bleed background in the light theme, and a rail behind it
-   would be visible in the dark theme and invisible in the light one. Above, with
-   pointer-events: none, is honest in both — and they never overlap the column. */
+   Rails exist ONLY where there IS an empty margin. The column is --wrap wide, so each
+   margin is (100vw - --wrap)/2, and below about 1400px that is too thin to hold
+   anything — so they are not rendered rather than squeezed against the text.
+
+   z-index 1 puts them ABOVE the section backgrounds (.section.alt paints an opaque
+   white full-bleed background in the light theme, and anything behind it would be
+   visible in dark and invisible in light) and below the nav. pointer-events: none. */
 .rails {
   display: none;
   position: fixed; inset: 0;
-  z-index: 1;                 /* over the section backgrounds, under the nav (100) */
+  z-index: 1;
   pointer-events: none;
 }
-.rail {
-  position: absolute; top: 0;
-  height: 100vh;
-  width: min(calc((100vw - var(--wrap)) / 2), 260px);
-}
-.rail-l { left: 0; }
-.rail-r { right: 0; }
+#rails-canvas { display: block; width: 100%; height: 100%; }
 
 @media (min-width: 1400px) {
   .rails { display: block; }
 }
 
-/* A rail that never moves is just clutter, so under reduced motion it draws one
-   still frame (rails.js stops the loop) and is dialled back to a watermark. */
+/* A rail that never moves is clutter, so under reduced motion rails.js draws one
+   still frame and stops the loop; this dials it back to a watermark. */
 @media (prefers-reduced-motion: reduce) {
-  .rail { opacity: 0.5; }
+  #rails-canvas { opacity: 0.5; }
 }
