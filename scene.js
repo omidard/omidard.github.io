@@ -1591,44 +1591,56 @@
   var body = document.getElementById('act-body');
   var statA = document.querySelector('[data-stat="a"]');
   var statB = document.querySelector('[data-stat="b"]');
+  var link = document.getElementById('act-link');
   var steps = document.querySelectorAll('.scrolly-steps li');
   var bar = document.getElementById('scrolly-bar');
 
+  /* Every number in here is read off the live data, not off memory:
+       4,659 models and 29 gtdb_species  -> panGEMs/gems_metadata.json
+       12,340 media                      -> Media/data/index.json  (the repo README still
+                                            says 11,367; the README is the stale one)
+       9,706 measured rates              -> GrowthDB/data/index.json (n_total_rates)
+     The Input/Output chips annotate what is on screen. The prose says what it is built
+     out of, and the link goes to the thing itself. */
   var ACTS = [
     {
       k: 'Act I · Sequence',
-      b: 'It starts as bits. Zeros and ones stream in, pair off into bases, and a genome assembles itself out of pure information.',
-      a: 'binary stream', bl: '1 genome'
+      b: 'It starts as bits. Zeros and ones pair off into bases and a genome assembles itself out of information. Everything after this point is rebuilt from public assemblies, so anyone can take the same inputs and get the same answer.',
+      a: 'binary stream', bl: '1 genome', l: []
     },
     {
       k: 'Act II · Pangenome',
-      b: 'One genome tells you almost nothing. Compress a hundred thousand of them and the species itself comes into focus: the genes every strain carries, the genes only some do, and the long tail almost nobody has.',
-      a: '100,000 genomes', bl: '1 pangenome'
+      b: 'One genome tells you almost nothing. Line up every assembly of a species and the species itself comes into focus: the genes each strain carries, the genes it has lost, and the accessory pool it draws on. Behind this site are 4,659 assemblies across 29 GTDB species.',
+      a: '4,659 assemblies', bl: '29 pangenomes', l: []
     },
     {
       k: 'Act III · Metabolism',
-      b: 'Then every gene becomes a reaction and the pangenome becomes a cell you can run. Flux moves through glycolysis and the TCA cycle, and the model predicts what the organism eats, what it secretes, and which genes it cannot live without.',
-      a: '1 pangenome', bl: '12,000 in-silico cells'
+      b: 'Then every gene becomes a reaction and the pangenome becomes a cell you can run. That is panGEMs: 4,659 genome-scale models, 2,313 Escherichia coli and 2,346 Lactobacillaceae, each one carved from its own genome and browsable strain by strain.',
+      a: '29 pangenomes', bl: '4,659 models',
+      l: [['panGEMs', 'https://omidard.github.io/panGEMs/']]
     },
     {
       k: 'Act IV · The cell',
-      b: 'The map is not the point. A membrane closes around the network and it becomes an organism: it swims, it finds sugar in the medium, and it eats. Everything after this is that same network, still running, inside something alive.',
-      a: 'a network', bl: 'an organism'
+      b: 'The map is not the point. A membrane closes around the network and it becomes an organism: it swims, it finds sugar in the medium, and it eats. Every reaction inside it still traces back to a gene through its GPR rule, which is the only reason a knockout means anything.',
+      a: 'a model', bl: 'an organism', l: []
     },
     {
       k: 'Act V · Uptake and secretion',
-      b: 'Inside. Nutrients dock at transporters in the membrane and cross it, the flux runs down glycolysis into the TCA cycle, and what the cell cannot use it throws away. Acetate and carbon dioxide go back out through the surface into the medium.',
-      a: 'glucose, O₂, NH₄⁺', bl: 'acetate, CO₂'
+      b: 'A model is only as good as the medium you put it in. Media is a library of 12,340 growth media, every component mapped to a BiGG exchange and every medium carrying its citation. GrowthDB adds 9,706 measured uptake and secretion rates, so a real number lands on a real exchange.',
+      a: 'glucose, O₂, NH₄⁺', bl: 'acetate, CO₂',
+      l: [['Media', 'https://omidard.github.io/Media/'],
+          ['GrowthDB', 'https://omidard.github.io/GrowthDB/']]
     },
     {
       k: 'Act VI · Strain design',
-      b: 'Now change it. Knock out pyruvate kinase, so the PEP cannot drain away to pyruvate, and acetate kinase, so the carbon cannot leak out as overflow. Switch on PEP carboxylase. The reductive arm of the cycle now RUNS BACKWARDS, and the succinate pours out. This is what the model is for: it tells you which edits to make before you make them.',
-      a: '✕ PYK · ✕ ACK · ↑ PPC', bl: 'succinate'
+      b: 'Now change it. Knock out pyruvate kinase so the PEP cannot drain away to pyruvate, knock out acetate kinase so the carbon cannot leak out as overflow, switch on PEP carboxylase, and the reductive arm of the cycle runs backwards into succinate. Flux Studio does this in your browser, on any of the 4,659 models, with no install and no queue.',
+      a: '✕ PYK · ✕ ACK · ↑ PPC', bl: 'succinate',
+      l: [['Flux Studio', 'https://omidard.github.io/FluxStudio/']]
     },
     {
       k: 'Act VII · Scale',
-      b: 'And then pull back. A cell is two micrometres; the vessel it lives in is two metres. That is a factor of a million, and the zoom out is honest the whole way: the field of view is printed on screen, and by the time the fermenter is in frame a cell is a small fraction of a single pixel. A bioreactor looks like cloudy water. Which is exactly why you have to model what is happening inside it.',
-      a: '2 µm', bl: '2 m · ×1,000,000'
+      b: 'And then pull back. A cell is two micrometres and the vessel it lives in is two metres, and the zoom out is honest the whole way: the field of view is printed on screen, and by the time the fermenter is in frame a cell is a small fraction of a single pixel. A bioreactor looks like cloudy water. Predicting what is going on inside it is the job.',
+      a: '2 µm', bl: '2 m · ×1,000,000', l: []
     }
   ];
 
@@ -1639,12 +1651,24 @@
       kicker.textContent = ACTS[i].k;
       body.textContent = ACTS[i].b;
       statB.textContent = ACTS[i].bl;
+      if (link) {
+        link.textContent = '';
+        for (var q = 0; q < ACTS[i].l.length; q++) {
+          var a = document.createElement('a');
+          a.textContent = ACTS[i].l[q][0];
+          a.href = ACTS[i].l[q][1];
+          a.target = '_blank';
+          a.rel = 'noopener';
+          link.appendChild(a);
+        }
+      }
       for (var s = 0; s < steps.length; s++) steps[s].classList.toggle('is-on', s === i);
     }
-    // in act II the genome counter actually counts, which is the whole point
+    // In act II the counter actually counts, which is the whole point. It counts to the
+    // assemblies that became the models on this site, not to a round number of nothing.
     if (i === 1) {
-      var c = Math.round(easeOut(clamp(lp / 0.82, 0, 1)) * 100000);
-      statA.textContent = c.toLocaleString('en-US') + ' genomes';
+      var c = Math.round(easeOut(clamp(lp / 0.82, 0, 1)) * 4659);
+      statA.textContent = c.toLocaleString('en-US') + ' assemblies';
     } else if (statA.textContent !== ACTS[i].a) {
       statA.textContent = ACTS[i].a;
     }

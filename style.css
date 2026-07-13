@@ -322,6 +322,27 @@ main, .nav, .footer { position: relative; z-index: 1; }
   font-variant-numeric: tabular-nums;
 }
 
+/* The act that shows a tool links to it. min-height reserves the row on the acts that
+   have none, so the card does not grow and shrink as you scrub past them. */
+.act-link {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: var(--sp-4) 0 0; min-height: 2.1em;
+}
+.act-link a {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  font-size: 0.73rem; letter-spacing: 0.04em;
+  color: var(--fg); text-decoration: none;
+  border: 1px solid var(--border-2); border-radius: 999px;
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
+              background var(--t-fast) var(--ease);
+}
+.act-link a::after { content: '↗'; opacity: 0.55; font-size: 0.9em; }
+.act-link a:hover, .act-link a:focus-visible {
+  color: var(--accent); border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
 .scrolly-rail {
   position: absolute; right: clamp(16px, 3vw, 40px); top: 50%;
   transform: translateY(-50%);
